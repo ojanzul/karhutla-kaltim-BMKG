@@ -1,0 +1,76 @@
+{
+  "date": "2026-07-16",
+  "generated_at": "2026-07-16T10:45",
+  "regions": [
+    {
+      "name": "Kota Samarinda",
+      "ffmc": 79.9,
+      "fwi": 5.3,
+      "n_grid_ffmc": 199,
+      "n_grid_fwi": 67
+    },
+    {
+      "name": "Kota Balikpapan",
+      "ffmc": 78.4,
+      "fwi": 3.3,
+      "n_grid_ffmc": 127,
+      "n_grid_fwi": 23
+    },
+    {
+      "name": "Kota Bontang",
+      "ffmc": 80.2,
+      "fwi": 4.3,
+      "n_grid_ffmc": 174,
+      "n_grid_fwi": 69
+    },
+    {
+      "name": "Kab. Kutai Kartanegara",
+      "ffmc": 78.4,
+      "fwi": 4.1,
+      "n_grid_ffmc": 452,
+      "n_grid_fwi": 70
+    },
+    {
+      "name": "Kab. Kutai Timur",
+      "ffmc": 70.7,
+      "fwi": 3.6,
+      "n_grid_ffmc": 1540,
+      "n_grid_fwi": 177
+    },
+    {
+      "name": "Kab. Kutai Barat",
+      "ffmc": 73.9,
+      "fwi": 4.9,
+      "n_grid_ffmc": 905,
+      "n_grid_fwi": 112
+    },
+    {
+      "name": "Kab. Paser",
+      "ffmc": 77.6,
+      "fwi": 7.6,
+      "n_grid_ffmc": 447,
+      "n_grid_fwi": 317
+    },
+    {
+      "name": "Kab. Penajam Paser Utara",
+      "ffmc": 76.9,
+      "fwi": 4.8,
+      "n_grid_ffmc": 293,
+      "n_grid_fwi": 69
+    },
+    {
+      "name": "Kab. Berau",
+      "ffmc": 66.9,
+      "fwi": 4.2,
+      "n_grid_ffmc": 2276,
+      "n_grid_fwi": 220
+    },
+    {
+      "name": "Kab. Mahakam Ulu",
+      "ffmc": 48.6,
+      "fwi": 1.8,
+      "n_grid_ffmc": 6870,
+      "n_grid_fwi": 38
+    }
+  ]
+}
