@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIAGA KARHUTLA — Kalimantan Timur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5FAF3;
+    --surface: #FFFFFF;
+    --surface-2: #F0F7EE;
+    --border: #DCEBD8;
+    --text: #1D3B2A;
+    --text-dim: #5B7A64;
+    --text-faint: #8FA894;
+    --brand: #2F9E6E;
+    --brand-dark: #1F7A54;
+    --brand-bg: #E7F7EC;
+    --rendah: #2FAE6B; --rendah-bg: #E5F7EC;
+    --sedang: #E0A400; --sedang-bg: #FBF0D2;
+    --tinggi: #EE7A1E; --tinggi-bg: #FCE9D8;
+    --ekstrim: #E0413F; --ekstrim-bg: #FBE1E0;
+    --shadow: 0 1px 2px rgba(29,59,42,0.04), 0 4px 16px rgba(29,59,42,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    padding: 28px 20px 60px;
+    min-height:100vh;
+  }
+  .wrap{ max-width: 1180px; margin:0 auto; }
+  .mono{ font-family:'JetBrains Mono',monospace; }
+  .display{ font-family:'Baloo 2',sans-serif; }
+
+  header{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:20px;
+    flex-wrap:wrap; margin-bottom:22px;
+  }
+  .eyebrow{
+    display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600;
+    color: var(--brand-dark); text-transform:uppercase; letter-spacing:0.06em;
+  }
+  .dot{ width:7px;height:7px;border-radius:50%; background:var(--rendah); }
+  h1{
+    font-family:'Baloo 2',sans-serif; font-weight:700; color:var(--text);
+    font-size: clamp(26px,4vw,38px); margin: 6px 0 6px;
+  }
+  header p{ color:var(--text-dim); margin:0; font-size:14px; max-width:520px; line-height:1.5; }
+
+  .status-box{ text-align:right; }
+  .status-line{ font-size:12.5px; color:var(--text-dim); margin-bottom:8px; }
+  .status-line.ok{ color:var(--brand-dark); font-weight:600; }
+  .status-line.err{ color:var(--ekstrim); font-weight:600; }
+  .refresh-btn{
+    background:var(--surface); border:1px solid var(--border); color:var(--brand-dark);
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:8px 16px;
+    border-radius:10px; cursor:pointer; box-shadow:var(--shadow); display:inline-flex; align-items:center; gap:6px;
+  }
+  .refresh-btn:hover{ background:var(--brand-bg); }
+  .refresh-btn:disabled{ opacity:0.6; cursor:default; }
+
+  /* day tabs */
+  .day-tabs{ display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .day-tab{
+    background:var(--surface); border:1.5px solid var(--border); border-radius:14px;
+    padding:10px 18px; cursor:pointer; box-shadow:var(--shadow); transition:border-color 0.15s;
+  }
+  .day-tab .l1{ font-weight:700; font-size:14px; color:var(--text); }
+  .day-tab .l2{ font-size:12px; color:var(--text-dim); margin-top:1px; }
+  .day-tab.active{ border-color:var(--brand); background:var(--brand-bg); }
+  .day-tab.active .l1{ color:var(--brand-dark); }
+
+  /* hero */
+  .hero{
+    background:var(--surface); border:1px solid var(--border); border-radius:20px;
+    padding: 26px 28px; margin-bottom: 20px; box-shadow:var(--shadow);
+  }
+  .hero-top{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:18px;}
+  .hero-label{ font-size:12.5px; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:0.05em;}
+  .hero-status{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:26px; }
+  .gauge-track{
+    height:14px; border-radius:8px; position:relative;
+    background: linear-gradient(90deg, var(--rendah) 0%, var(--rendah) 22%, var(--sedang) 22%, var(--sedang) 48%, var(--tinggi) 48%, var(--tinggi) 75%, var(--ekstrim) 75%, var(--ekstrim) 100%);
+  }
+  .gauge-marker{
+    position:absolute; top:-8px; width:3px; height:30px; background:var(--text);
+    border-radius:2px; transition: left 0.4s ease;
+  }
+  .gauge-marker::after{
+    content:attr(data-val); position:absolute; top:-22px; left:50%; transform:translateX(-50%);
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text); font-weight:500; white-space:nowrap;
+  }
+  .gauge-scale{ display:flex; justify-content:space-between; margin-top:8px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); }
+
+  .summary-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .sum-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px 18px;
+    box-shadow:var(--shadow); border-top:4px solid var(--border);
+  }
+  .sum-card .n{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:26px; }
+  .sum-card .l{ font-size:12.5px; color:var(--text-dim); margin-top:2px;}
+  .sum-card.rendah{ border-top-color:var(--rendah); } .sum-card.rendah .n{ color:var(--rendah); }
+  .sum-card.sedang{ border-top-color:var(--sedang); } .sum-card.sedang .n{ color:var(--sedang); }
+  .sum-card.tinggi{ border-top-color:var(--tinggi); } .sum-card.tinggi .n{ color:var(--tinggi); }
+  .sum-card.ekstrim{ border-top-color:var(--ekstrim); } .sum-card.ekstrim .n{ color:var(--ekstrim); }
+
+  .panel{ background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:22px 24px; margin-bottom:20px; box-shadow:var(--shadow); }
+  .panel-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;}
+  .panel-head h2{ font-family:'Baloo 2',sans-serif; font-size:18px; margin:0; font-weight:600; }
+  .panel-head span{ font-size:12px; color:var(--text-faint); }
+
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  th{
+    text-align:left; font-weight:600; font-size:11.5px;
+    text-transform:uppercase; letter-spacing:0.04em; color:var(--text-dim); padding:8px 10px;
+    border-bottom:2px solid var(--border); cursor:pointer; user-select:none;
+  }
+  th:hover{ color:var(--brand-dark); }
+  td{ padding:11px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  tr:last-child td{ border-bottom:none; }
+  tr:hover td{ background: var(--surface-2); }
+  .badge{
+    display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px;
+    font-size:12px; font-weight:700;
+  }
+  .badge .d{ width:6px;height:6px;border-radius:50%; }
+  .badge.rendah{ background:var(--rendah-bg); color:var(--rendah); } .badge.rendah .d{ background:var(--rendah); }
+  .badge.sedang{ background:var(--sedang-bg); color:var(--sedang); } .badge.sedang .d{ background:var(--sedang); }
+  .badge.tinggi{ background:var(--tinggi-bg); color:var(--tinggi); } .badge.tinggi .d{ background:var(--tinggi); }
+  .badge.ekstrim{ background:var(--ekstrim-bg); color:var(--ekstrim); } .badge.ekstrim .d{ background:var(--ekstrim); }
+  .bar-track{ width:70px; height:7px; background:var(--surface-2); border-radius:4px; overflow:hidden; display:inline-block; }
+  .bar-fill{ height:100%; border-radius:4px; }
+  .val{ font-family:'JetBrains Mono',monospace; font-weight:500; }
+
+  .legend{ display:flex; gap:18px; flex-wrap:wrap; margin-top:4px; }
+  .legend-item{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-dim); }
+  .legend-sw{ width:10px;height:10px;border-radius:3px; }
+
+  .empty-note{ text-align:center; padding:30px 10px; color:var(--text-dim); font-size:14px; }
+
+  footer{ margin-top:26px; padding-top:20px; border-top:1px solid var(--border); font-size:12.5px; color:var(--text-faint); line-height:1.7; }
+  footer a{ color:var(--brand-dark); text-decoration:none; font-weight:600; }
+
+  @media (max-width:760px){
+    .summary-row{ grid-template-columns:repeat(2,1fr); }
+    table{ font-size:12px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="eyebrow"><span class="dot"></span> Sistem siaga · fire danger rating</div>
+      <h1>KARHUTLA Kalimantan Timur</h1>
+      <p>Pemantauan indeks FFMC & FWI untuk 10 kabupaten/kota di Kalimantan Timur, proyeksi 3 hari, berbasis SPARTAN — BMKG.</p>
+    </div>
+    <div class="status-box">
+      <div class="status-line" id="statusLine">memuat data...</div>
+      <button class="refresh-btn" id="refreshBtn"><span>&#8635;</span> Perbarui data</button>
+    </div>
+  </header>
+
+  <div class="day-tabs" id="dayTabs"></div>
+
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-label">Status siaga rata-rata provinsi (FWI)</div>
+        <div class="hero-status" id="heroStatus">—</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="hero-label">Wilayah risiko tertinggi</div>
+        <div class="hero-status" id="heroTopRegion" style="font-size:17px;">—</div>
+      </div>
+    </div>
+    <div class="gauge-track">
+      <div class="gauge-marker" id="gaugeMarker" data-val="0" style="left:0%;"></div>
+    </div>
+    <div class="gauge-scale">
+      <span>0 · Rendah</span><span>2</span><span>Sedang</span><span>7</span><span>Tinggi</span><span>13</span><span>Ekstrim &#8594;</span>
+    </div>
+  </div>
+
+  <div class="summary-row" id="summaryRow"></div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Data wilayah</h2>
+      <span id="tableDateLabel"></span>
+    </div>
+    <div id="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="name">Kabupaten / kota</th>
+            <th data-sort="ffmc">FFMC</th>
+            <th>Kelas FFMC</th>
+            <th data-sort="fwi">FWI</th>
+            <th>Kelas FWI</th>
+            <th data-sort="fwi">Intensitas</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="legend" style="margin-top:16px;">
+      <div class="legend-item"><span class="legend-sw" style="background:var(--rendah)"></span>Rendah</div>
+      <div class="legend-item"><span class="legend-sw" style="background:var(--sedang)"></span>Sedang</div>
+      <div class="legend-item"><span class="legend-sw" style="background:var(--tinggi)"></span>Tinggi</div>
+      <div class="legend-item"><span class="legend-sw" style="background:var(--ekstrim)"></span>Ekstrim</div>
+    </div>
+  </div>
+
+  <footer>
+    <strong style="color:var(--text-dim)">Tentang data.</strong> Data diambil otomatis dari repositori publik yang diperbarui harian oleh pipeline unduh SPARTAN — BMKG. Sumber: <a href="https://spartan.bmkg.go.id/MapInteractive" target="_blank">spartan.bmkg.go.id</a>.
+    <br><br>
+    <strong style="color:var(--text-dim)">Klasifikasi.</strong> FFMC — Rendah &lt;76 · Sedang 76–83 · Tinggi 83–89 · Ekstrim ≥89. FWI — Rendah &lt;2 · Sedang 2–7 · Tinggi 7–13 · Ekstrim ≥13. Ambang mengikuti kelas umum SPBK/FWI Kanada yang diadopsi BMKG; rujuk legenda resmi di peta SPARTAN untuk presisi tinggi.
+  </footer>
+
+</div>
+
+<script>
+const DATA_URL = "https://raw.githubusercontent.com/ojanzul/karhutla-kaltim-BMKG/main/data.json";
+
+const FALLBACK_REGIONS = [
+  {name:"Kota Samarinda", ffmc:82, fwi:6},
+  {name:"Kota Balikpapan", ffmc:78, fwi:4},
+  {name:"Kota Bontang", ffmc:80, fwi:5},
+  {name:"Kab. Kutai Kartanegara", ffmc:87, fwi:11},
+  {name:"Kab. Kutai Timur", ffmc:90, fwi:15},
+  {name:"Kab. Kutai Barat", ffmc:84, fwi:8},
+  {name:"Kab. Paser", ffmc:79, fwi:5},
+  {name:"Kab. Penajam Paser Utara", ffmc:81, fwi:6},
+  {name:"Kab. Berau", ffmc:75, fwi:3},
+  {name:"Kab. Mahakam Ulu", ffmc:70, fwi:2},
+];
+
+function fallbackDays(){
+  const out = [];
+  for(let i=0;i<3;i++){
+    const d = new Date();
+    d.setDate(d.getDate()+i);
+    out.push({ date: d.toISOString().slice(0,10), offset:i, regions: FALLBACK_REGIONS, isFallback:true });
+  }
+  return out;
+}
+
+let payload = { days: fallbackDays() };
+let activeDayIdx = 0;
+let sortKey = null;
+let sortAsc = true;
+
+const LABEL = {rendah:'Rendah', sedang:'Sedang', tinggi:'Tinggi', ekstrim:'Ekstrim'};
+const DAY_NAMES = ['Hari ini','Besok','Lusa'];
+
+function classifyFFMC(v){
+  if(v==null) return 'sedang';
+  if(v>=89) return 'ekstrim';
+  if(v>=83) return 'tinggi';
+  if(v>=76) return 'sedang';
+  return 'rendah';
+}
+function classifyFWI(v){
+  if(v==null) return 'sedang';
+  if(v>=13) return 'ekstrim';
+  if(v>=7) return 'tinggi';
+  if(v>=2) return 'sedang';
+  return 'rendah';
+}
+
+function fmtDate(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('id-ID', {day:'numeric', month:'short'});
+}
+
+function renderTabs(){
+  const wrap = document.getElementById('dayTabs');
+  wrap.innerHTML = payload.days.map((day, i)=>`
+    <div class="day-tab ${i===activeDayIdx?'active':''}" data-idx="${i}">
+      <div class="l1">${DAY_NAMES[day.offset] || fmtDate(day.date)}</div>
+      <div class="l2">${fmtDate(day.date)}</div>
+    </div>`).join('');
+  wrap.querySelectorAll('.day-tab').forEach(el=>{
+    el.addEventListener('click', ()=>{ activeDayIdx = Number(el.dataset.idx); render(); });
+  });
+}
+
+function currentDay(){ return payload.days[activeDayIdx] || payload.days[0]; }
+
+function render(){
+  renderTabs();
+  const day = currentDay();
+  if(!day || !day.regions || day.regions.length===0){
+    document.getElementById('heroStatus').textContent = '—';
+    document.getElementById('heroTopRegion').textContent = '—';
+    document.getElementById('summaryRow').innerHTML = '';
+    document.getElementById('tableBody').innerHTML = '';
+    document.getElementById('tableWrap').innerHTML = '<div class="empty-note">Belum ada data untuk tanggal ini.</div>';
+    return;
+  }
+
+  document.getElementById('tableDateLabel').textContent = fmtDate(day.date);
+
+  const fwiVals = day.regions.map(r=>Number(r.fwi)||0);
+  const avg = fwiVals.reduce((a,b)=>a+b,0) / fwiVals.length;
+  const cls = classifyFWI(avg);
+  const heroStatus = document.getElementById('heroStatus');
+  heroStatus.textContent = LABEL[cls] + ' · FWI ' + avg.toFixed(1);
+  heroStatus.style.color = `var(--${cls})`;
+
+  const top = [...day.regions].sort((a,b)=>(b.fwi||0)-(a.fwi||0))[0];
+  const topEl = document.getElementById('heroTopRegion');
+  topEl.textContent = top.name + ' (FWI ' + top.fwi + ')';
+  topEl.style.color = `var(--${classifyFWI(top.fwi)})`;
+
+  const pct = Math.min(100, (avg/20)*100);
+  const marker = document.getElementById('gaugeMarker');
+  marker.style.left = pct + '%';
+  marker.setAttribute('data-val', avg.toFixed(1));
+
+  const counts = {rendah:0, sedang:0, tinggi:0, ekstrim:0};
+  day.regions.forEach(r=> counts[classifyFWI(r.fwi)]++ );
+  document.getElementById('summaryRow').innerHTML = ['rendah','sedang','tinggi','ekstrim'].map(k=>`
+    <div class="sum-card ${k}">
+      <div class="n">${counts[k]}</div>
+      <div class="l">Wilayah — ${LABEL[k]}</div>
+    </div>`).join('');
+
+  let rows = [...day.regions];
+  if(sortKey){
+    rows.sort((a,b)=>{
+      let av=a[sortKey], bv=b[sortKey];
+      if(typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+      return sortAsc ? (av||0)-(bv||0) : (bv||0)-(av||0);
+    });
+  }
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('tableWrap').innerHTML = `<table>
+    <thead><tr>
+      <th data-sort="name">Kabupaten / kota</th>
+      <th data-sort="ffmc">FFMC</th><th>Kelas FFMC</th>
+      <th data-sort="fwi">FWI</th><th>Kelas FWI</th><th data-sort="fwi">Intensitas</th>
+    </tr></thead>
+    <tbody id="tableBody"></tbody></table>`;
+  const tbody2 = document.getElementById('tableBody');
+  tbody2.innerHTML = rows.map(r=>{
+    const fc = classifyFFMC(r.ffmc);
+    const wc = classifyFWI(r.fwi);
+    const barPct = Math.min(100, ((r.fwi||0)/20)*100);
+    return `
+    <tr>
+      <td>${r.name}</td>
+      <td class="val">${r.ffmc ?? '—'}</td>
+      <td><span class="badge ${fc}"><span class="d"></span>${LABEL[fc]}</span></td>
+      <td class="val">${r.fwi ?? '—'}</td>
+      <td><span class="badge ${wc}"><span class="d"></span>${LABEL[wc]}</span></td>
+      <td><span class="bar-track"><span class="bar-fill" style="width:${barPct}%; background:var(--${wc});"></span></span></td>
+    </tr>`;
+  }).join('');
+
+  document.querySelectorAll('#tableWrap th[data-sort]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.sort;
+      if(sortKey===key){ sortAsc = !sortAsc; } else { sortKey = key; sortAsc = true; }
+      render();
+    });
+  });
+}
+
+async function fetchData(silent){
+  const statusEl = document.getElementById('statusLine');
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  if(!silent) statusEl.textContent = 'memuat data...';
+  statusEl.className = 'status-line';
+  try{
+    const bust = DATA_URL + (DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+    const res = await fetch(bust, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if(!json.days || !Array.isArray(json.days) || json.days.length===0) throw new Error('format tidak dikenali');
+    payload = json;
+    activeDayIdx = 0;
+    statusEl.textContent = 'data terbaru — diperbarui ' + new Date(json.generated_at || Date.now()).toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'});
+    statusEl.classList.add('ok');
+  }catch(e){
+    statusEl.textContent = 'gagal memuat data live (' + e.message + ') — menampilkan contoh';
+    statusEl.classList.add('err');
+    payload = { days: fallbackDays() };
+    activeDayIdx = 0;
+  }finally{
+    btn.disabled = false;
+    render();
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', ()=> fetchData(false));
+
+fetchData(true);
+</script>
+</body>
+</html>
