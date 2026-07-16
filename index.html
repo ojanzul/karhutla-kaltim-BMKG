@@ -81,6 +81,7 @@
     padding: 26px 28px; margin-bottom: 20px; box-shadow:var(--shadow);
   }
   .hero-top{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:18px;}
+  .hero-risk{ text-align:right; }
   .hero-label{ font-size:12.5px; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:0.05em;}
   .hero-status{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:26px; }
   .gauge-track{
@@ -137,6 +138,21 @@
   .bar-fill{ height:100%; border-radius:4px; }
   .val{ font-family:'JetBrains Mono',monospace; font-weight:500; }
 
+  .info-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .info-card{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:14px;
+    padding:18px 20px;
+  }
+  .info-card .info-title{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .info-card .info-code{
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px;
+    color:var(--brand-dark); background:var(--brand-bg); padding:3px 9px; border-radius:7px;
+  }
+  .info-card h3{ font-family:'Baloo 2',sans-serif; font-size:15.5px; margin:0; font-weight:600; }
+  .info-card p{ font-size:13px; color:var(--text-dim); line-height:1.6; margin:0 0 10px; }
+  .info-card .info-read{ font-size:12.5px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:8px 12px; line-height:1.5; }
+  .info-card .info-read b{ color:var(--brand-dark); }
+
   .legend{ display:flex; gap:18px; flex-wrap:wrap; margin-top:4px; }
   .legend-item{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-dim); }
   .legend-sw{ width:10px;height:10px;border-radius:3px; }
@@ -146,9 +162,30 @@
   footer{ margin-top:26px; padding-top:20px; border-top:1px solid var(--border); font-size:12.5px; color:var(--text-faint); line-height:1.7; }
   footer a{ color:var(--brand-dark); text-decoration:none; font-weight:600; }
 
+  #tableWrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -2px; }
+  #tableWrap table{ min-width:600px; }
+
   @media (max-width:760px){
     .summary-row{ grid-template-columns:repeat(2,1fr); }
     table{ font-size:12px; }
+    .info-grid{ grid-template-columns:1fr; }
+  }
+
+  @media (max-width:600px){
+    body{ padding:18px 14px 48px; }
+    header{ align-items:flex-start; }
+    .status-box{ text-align:left; width:100%; }
+    .refresh-btn{ width:100%; justify-content:center; }
+    .day-tabs{ flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }
+    .day-tab{ flex:1 0 auto; min-width:96px; padding:9px 12px; text-align:center; }
+    .hero{ padding:20px 18px; }
+    .hero-top{ gap:10px; }
+    .hero-risk{ text-align:left; width:100%; }
+    .hero-status{ font-size:22px; }
+    .gauge-scale{ font-size:9px; }
+    .panel{ padding:18px 16px; }
+    .sum-card{ padding:14px 14px; }
+    .sum-card .n{ font-size:22px; }
   }
 </style>
 </head>
@@ -175,7 +212,7 @@
         <div class="hero-label">Status siaga rata-rata provinsi (FWI)</div>
         <div class="hero-status" id="heroStatus">—</div>
       </div>
-      <div style="text-align:right;">
+      <div class="hero-risk">
         <div class="hero-label">Wilayah risiko tertinggi</div>
         <div class="hero-status" id="heroTopRegion" style="font-size:17px;">—</div>
       </div>
@@ -189,6 +226,31 @@
   </div>
 
   <div class="summary-row" id="summaryRow"></div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Apa itu FFMC & FWI?</h2>
+      <span>Indeks kesiagaan kebakaran hutan/lahan adopsi Kanada, dipakai BMKG</span>
+    </div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-title">
+          <span class="info-code">FFMC</span>
+          <h3>Fine Fuel Moisture Code</h3>
+        </div>
+        <p>Mengukur tingkat kekeringan bahan bakar ringan di permukaan tanah — dedaunan gugur, ranting kecil, alang-alang. Bahan setipis ini bereaksi cepat terhadap panas dan angin, jadi FFMC bisa berubah drastis dalam hitungan jam.</p>
+        <div class="info-read">Skala 0–101. Makin <b>tinggi</b> nilainya, permukaan makin kering dan makin gampang tersulut walau hanya dari percikan kecil.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-title">
+          <span class="info-code">FWI</span>
+          <h3>Fire Weather Index</h3>
+        </div>
+        <p>Menggabungkan kekeringan bahan bakar dengan kondisi cuaca saat ini (kecepatan angin, kelembapan) untuk memperkirakan seberapa besar dan cepat api bisa membesar apabila kebakaran benar-benar terjadi. Inilah indeks yang dipakai sebagai status siaga utama di bagian atas dashboard.</p>
+        <div class="info-read">Makin <b>tinggi</b> nilainya, makin besar potensi intensitas api dan makin sulit dikendalikan bila kebakaran terjadi.</div>
+      </div>
+    </div>
+  </div>
 
   <div class="panel">
     <div class="panel-head">
