@@ -245,25 +245,26 @@ let activeDayIdx = 0;
 let sortKey = null;
 let sortAsc = true;
 
-const CLASS_LABEL = {rendah:'RENDAH', sedang:'SEDANG', tinggi:'TINGGI', ekstrim:'EKSTRIM'};
+const CLASS_LABEL = {rendah:'RENDAH', sedang:'SEDANG', tinggi:'TINGGI', ekstrim:'EKSTRIM', nodata:'TANPA DATA'};
 const CLASS_BADGE = {
   rendah: 'bg-blue-950 text-blue-400 border-blue-700/50',
   sedang: 'bg-amber-950 text-amber-400 border-amber-700/60',
   tinggi: 'bg-red-900/60 text-red-300 border-red-700',
   ekstrim: 'bg-purple-900/60 text-purple-300 border-purple-700',
+  nodata: 'bg-slate-800 text-slate-500 border-slate-600',
 };
-const CLASS_HEX = { rendah:'#3b82f6', sedang:'#f59e0b', tinggi:'#ef4444', ekstrim:'#a855f7' };
+const CLASS_HEX = { rendah:'#3b82f6', sedang:'#f59e0b', tinggi:'#ef4444', ekstrim:'#a855f7', nodata:'#64748b' };
 const DAY_NAMES = ['Hari ini','Besok','Lusa'];
 
 function classifyFFMC(v){
-  if(v==null) return 'sedang';
+  if(v==null) return 'nodata';
   if(v>=89) return 'ekstrim';
   if(v>=83) return 'tinggi';
   if(v>=76) return 'sedang';
   return 'rendah';
 }
 function classifyFWI(v){
-  if(v==null) return 'sedang';
+  if(v==null) return 'nodata';
   if(v>=13) return 'ekstrim';
   if(v>=7) return 'tinggi';
   if(v>=2) return 'sedang';
@@ -356,42 +357,42 @@ function render(){
     return;
   }
 
-  const fwiVals = day.regions.map(r=>Number(r.fwi)||0);
-  const avg = fwiVals.reduce((a,b)=>a+b,0) / fwiVals.length;
+  const fwiVals = day.regions.map(r=>r.fwi).filter(v=>v!=null && Number.isFinite(Number(v))).map(Number);
+  const avg = fwiVals.length ? fwiVals.reduce((a,b)=>a+b,0) / fwiVals.length : null;
   const cls = classifyFWI(avg);
   const heroStatus = document.getElementById('heroStatus');
-  heroStatus.textContent = CLASS_LABEL[cls] + ' · FWI ' + avg.toFixed(1);
+  heroStatus.textContent = avg==null ? 'TANPA DATA' : (CLASS_LABEL[cls] + ' · FWI ' + avg.toFixed(1));
   heroStatus.style.color = CLASS_HEX[cls];
 
-  const top = [...day.regions].sort((a,b)=>(b.fwi||0)-(a.fwi||0))[0];
+  const top = [...day.regions].sort((a,b)=>(b.fwi ?? -1)-(a.fwi ?? -1))[0];
   const topEl = document.getElementById('heroTopRegion');
-  topEl.textContent = top.name + ' (FWI ' + top.fwi + ')';
+  topEl.textContent = top.name + ' (FWI ' + (top.fwi ?? '—') + ')';
   topEl.style.color = CLASS_HEX[classifyFWI(top.fwi)];
 
-  const pct = gaugePct(avg, [2, 7, 13]);
+  const pct = gaugePct(avg ?? 0, [2, 7, 13]);
   document.getElementById('gaugeMarker').style.left = pct + '%';
-  document.getElementById('gaugeVal').textContent = avg.toFixed(1);
+  document.getElementById('gaugeVal').textContent = avg==null ? '—' : avg.toFixed(1);
 
-  const ffmcVals = day.regions.map(r=>Number(r.ffmc)||0);
-  const avgFfmc = ffmcVals.reduce((a,b)=>a+b,0) / ffmcVals.length;
+  const ffmcVals = day.regions.map(r=>r.ffmc).filter(v=>v!=null && Number.isFinite(Number(v))).map(Number);
+  const avgFfmc = ffmcVals.length ? ffmcVals.reduce((a,b)=>a+b,0) / ffmcVals.length : null;
   const clsFfmc = classifyFFMC(avgFfmc);
   const heroStatusFfmc = document.getElementById('heroStatusFfmc');
-  heroStatusFfmc.textContent = CLASS_LABEL[clsFfmc] + ' · FFMC ' + avgFfmc.toFixed(1);
+  heroStatusFfmc.textContent = avgFfmc==null ? 'TANPA DATA' : (CLASS_LABEL[clsFfmc] + ' · FFMC ' + avgFfmc.toFixed(1));
   heroStatusFfmc.style.color = CLASS_HEX[clsFfmc];
 
-  const topFfmc = [...day.regions].sort((a,b)=>(b.ffmc||0)-(a.ffmc||0))[0];
+  const topFfmc = [...day.regions].sort((a,b)=>(b.ffmc ?? -1)-(a.ffmc ?? -1))[0];
   const topFfmcEl = document.getElementById('heroTopRegionFfmc');
-  topFfmcEl.textContent = topFfmc.name + ' (FFMC ' + topFfmc.ffmc + ')';
+  topFfmcEl.textContent = topFfmc.name + ' (FFMC ' + (topFfmc.ffmc ?? '—') + ')';
   topFfmcEl.style.color = CLASS_HEX[classifyFFMC(topFfmc.ffmc)];
 
-  const pctFfmc = gaugePct(avgFfmc, [76, 83, 89]);
+  const pctFfmc = gaugePct(avgFfmc ?? 0, [76, 83, 89]);
   document.getElementById('gaugeMarkerFfmc').style.left = pctFfmc + '%';
-  document.getElementById('gaugeValFfmc').textContent = avgFfmc.toFixed(1);
+  document.getElementById('gaugeValFfmc').textContent = avgFfmc==null ? '—' : avgFfmc.toFixed(1);
 
-  const counts = {rendah:0, sedang:0, tinggi:0, ekstrim:0};
+  const counts = {rendah:0, sedang:0, tinggi:0, ekstrim:0, nodata:0};
   day.regions.forEach(r=> counts[classifyFWI(r.fwi)]++ );
-  const summaryColor = { rendah:'border-blue-500 text-blue-400', sedang:'border-amber-500 text-amber-400', tinggi:'border-red-500 text-red-400', ekstrim:'border-purple-500 text-purple-400' };
-  document.getElementById('summaryRow').innerHTML = ['rendah','sedang','tinggi','ekstrim'].map(k=>`
+  const summaryColor = { rendah:'border-blue-500 text-blue-400', sedang:'border-amber-500 text-amber-400', tinggi:'border-red-500 text-red-400', ekstrim:'border-purple-500 text-purple-400', nodata:'border-slate-600 text-slate-500' };
+  document.getElementById('summaryRow').innerHTML = ['rendah','sedang','tinggi','ekstrim','nodata'].map(k=>`
     <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 border-t-4 ${summaryColor[k]}">
       <div class="text-2xl font-bold ${summaryColor[k].split(' ')[1]}">${counts[k]}</div>
       <div class="text-xs text-slate-400 mt-0.5">Wilayah — ${CLASS_LABEL[k]}</div>
