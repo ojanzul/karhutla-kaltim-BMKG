@@ -42,24 +42,47 @@
 
   <section id="dayTabs" class="flex flex-wrap gap-2"></section>
 
-  <section class="bg-slate-800 p-5 md:p-6 rounded-xl border border-slate-700 shadow-lg">
-    <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
-      <div>
-        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status siaga rata-rata provinsi (FWI)</div>
-        <div id="heroStatus" class="text-2xl font-bold mt-1">—</div>
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-slate-800 p-5 md:p-6 rounded-xl border border-slate-700 shadow-lg">
+      <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status siaga rata-rata provinsi (FWI)</div>
+          <div id="heroStatus" class="text-2xl font-bold mt-1">—</div>
+        </div>
+        <div class="md:text-right">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Wilayah risiko tertinggi</div>
+          <div id="heroTopRegion" class="text-base font-semibold mt-1">—</div>
+        </div>
       </div>
-      <div class="md:text-right">
-        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Wilayah risiko tertinggi</div>
-        <div id="heroTopRegion" class="text-base font-semibold mt-1">—</div>
+      <div class="h-3 rounded-full relative" style="background:linear-gradient(90deg,#3b82f6 0%,#3b82f6 22%,#f59e0b 22%,#f59e0b 48%,#ef4444 48%,#ef4444 75%,#a855f7 75%,#a855f7 100%)">
+        <div id="gaugeMarker" class="absolute -top-2 w-[3px] h-7 bg-white rounded" style="left:0%;">
+          <span id="gaugeVal" class="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-mono text-slate-200 whitespace-nowrap">0</span>
+        </div>
+      </div>
+      <div class="flex justify-between mt-2 text-[10px] font-mono text-slate-500">
+        <span>0 · Rendah</span><span>2</span><span>Sedang</span><span>7</span><span>Tinggi</span><span>13</span><span>Ekstrim →</span>
       </div>
     </div>
-    <div class="h-3 rounded-full relative" style="background:linear-gradient(90deg,#3b82f6 0%,#3b82f6 22%,#f59e0b 22%,#f59e0b 48%,#ef4444 48%,#ef4444 75%,#a855f7 75%,#a855f7 100%)">
-      <div id="gaugeMarker" class="absolute -top-2 w-[3px] h-7 bg-white rounded" style="left:0%;">
-        <span id="gaugeVal" class="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-mono text-slate-200 whitespace-nowrap">0</span>
+
+    <div class="bg-slate-800 p-5 md:p-6 rounded-xl border border-slate-700 shadow-lg">
+      <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status siaga rata-rata provinsi (FFMC)</div>
+          <div id="heroStatusFfmc" class="text-2xl font-bold mt-1">—</div>
+        </div>
+        <div class="md:text-right">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Wilayah risiko tertinggi</div>
+          <div id="heroTopRegionFfmc" class="text-base font-semibold mt-1">—</div>
+        </div>
       </div>
-    </div>
-    <div class="flex justify-between mt-2 text-[10px] font-mono text-slate-500">
-      <span>0 · Rendah</span><span>2</span><span>Sedang</span><span>7</span><span>Tinggi</span><span>13</span><span>Ekstrim →</span>
+      <div class="h-3 rounded-full relative" style="background:linear-gradient(90deg,#3b82f6 0%,#3b82f6 75.2%,#f59e0b 75.2%,#f59e0b 82.2%,#ef4444 82.2%,#ef4444 88.1%,#a855f7 88.1%,#a855f7 100%)">
+        <div id="gaugeMarkerFfmc" class="absolute -top-2 w-[3px] h-7 bg-white rounded" style="left:0%;">
+          <span id="gaugeValFfmc" class="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-mono text-slate-200 whitespace-nowrap">0</span>
+        </div>
+      </div>
+      <div class="flex justify-between mt-2 text-[10px] font-mono text-slate-500">
+        <span>0 · Rendah</span><span>76</span><span>Sedang</span><span>83</span><span>Tinggi</span><span>89</span><span>Ekstrim →</span>
+      </div>
     </div>
   </section>
 
@@ -110,7 +133,7 @@
             <th class="py-3 px-4 text-center cursor-pointer select-none hover:text-blue-400" data-sort="fwi">Indeks FWI</th>
             <th class="py-3 px-4 text-center">Tren besok</th>
             <th class="py-3 px-5 w-[32%]">Panduan umum tindakan</th>
-            <th class="py-3 px-4 text-center">Titik grid</th>
+            <th class="py-3 px-4 text-center">Kecamatan</th>
           </tr>
         </thead>
         <tbody id="tableBody" class="divide-y divide-slate-700 text-sm"></tbody>
@@ -120,9 +143,10 @@
 
   <footer class="text-xs text-slate-500 leading-relaxed pb-4">
     <p><b class="text-slate-400">Klasifikasi.</b> FFMC — Rendah &lt;76 · Sedang 76–83 · Tinggi 83–89 · Ekstrim ≥89. FWI — Rendah &lt;2 · Sedang 2–7 · Tinggi 7–13 · Ekstrim ≥13. Ambang mengikuti kelas umum SPBK/FWI Kanada yang diadopsi BMKG; rujuk legenda resmi di peta SPARTAN untuk presisi tinggi.</p>
-    <p class="mt-2"><b class="text-slate-400">Tentang data.</b> Diambil otomatis dari repositori publik yang diperbarui harian oleh pipeline unduh SPARTAN — BMKG. Sumber: <a href="https://spartan.bmkg.go.id/MapInteractive" target="_blank" class="text-blue-400 hover:underline">spartan.bmkg.go.id</a>.</p>
+    <p class="mt-2"><b class="text-slate-400">Tentang data.</b> Sumber: <a href="https://spartan.bmkg.go.id/MapInteractive" target="_blank" class="text-blue-400 hover:underline">spartan.bmkg.go.id</a>.</p>
     <p class="mt-2"><b class="text-slate-400">Catatan akurasi.</b> Nilai per kabupaten dihitung dari grid terdekat ke satu titik pusat kabupaten (nearest-centroid), bukan zonal-statistics dengan batas administrasi resmi. Untuk kabupaten yang sangat luas (Kutai Timur, Kutai Barat, Kutai Kartanegara) ini hanya perkiraan kasar.</p>
-    <p class="mt-2"><b class="text-slate-400">Panduan tindakan.</b> Teks "panduan umum tindakan" di tabel bersifat referensi umum berbasis ambang FWI, bukan instruksi resmi BPBD/BMKG. Keputusan operasional tetap mengikuti arahan instansi berwenang setempat.</p>
+    <p class="mt-2"><b class="text-slate-400">Level data.</b> Dashboard ini menyajikan data sampai level kabupaten/kota. Breakdown per kecamatan belum tersedia karena memerlukan data batas administrasi kecamatan resmi (BIG/Kemendagri) yang belum diintegrasikan ke pipeline.</p>
+    <p class="mt-2"><b class="text-slate-400">Panduan tindakan.</b> Teks "panduan umum tindakan" di tabel bersifat referensi umum berbasis ambang FWI/FFMC dan penjelasan resmi BMKG mengenai makna kedua indeks, bukan instruksi taktis atau SOP resmi BPBD/BMKG. Keputusan operasional tetap mengikuti arahan instansi berwenang setempat.</p>
   </footer>
 
 </main>
@@ -151,16 +175,43 @@
 const DATA_URL = "https://raw.githubusercontent.com/ojanzul/karhutla-kaltim-BMKG/main/data.json";
 
 const FALLBACK_REGIONS = [
-  {name:"Kota Samarinda", ffmc:82, fwi:6, n_grid_ffmc:9, n_grid_fwi:9},
-  {name:"Kota Balikpapan", ffmc:78, fwi:4, n_grid_ffmc:7, n_grid_fwi:7},
-  {name:"Kota Bontang", ffmc:80, fwi:5, n_grid_ffmc:5, n_grid_fwi:5},
-  {name:"Kab. Kutai Kartanegara", ffmc:87, fwi:11, n_grid_ffmc:22, n_grid_fwi:22},
-  {name:"Kab. Kutai Timur", ffmc:90, fwi:15, n_grid_ffmc:26, n_grid_fwi:26},
-  {name:"Kab. Kutai Barat", ffmc:84, fwi:8, n_grid_ffmc:19, n_grid_fwi:19},
-  {name:"Kab. Paser", ffmc:79, fwi:5, n_grid_ffmc:14, n_grid_fwi:14},
-  {name:"Kab. Penajam Paser Utara", ffmc:81, fwi:6, n_grid_ffmc:10, n_grid_fwi:10},
-  {name:"Kab. Berau", ffmc:75, fwi:3, n_grid_ffmc:21, n_grid_fwi:21},
-  {name:"Kab. Mahakam Ulu", ffmc:70, fwi:2, n_grid_ffmc:12, n_grid_fwi:12},
+  {name:"Kota Samarinda", ffmc:82, fwi:6, n_grid_ffmc:9, n_grid_fwi:9, kecamatan:[
+    {name:"Samarinda Ulu", ffmc:83, fwi:7, n_grid_ffmc:3, n_grid_fwi:3},
+    {name:"Samarinda Utara", ffmc:81, fwi:6, n_grid_ffmc:3, n_grid_fwi:3},
+    {name:"Palaran", ffmc:80, fwi:5, n_grid_ffmc:3, n_grid_fwi:3},
+  ]},
+  {name:"Kota Balikpapan", ffmc:78, fwi:4, n_grid_ffmc:7, n_grid_fwi:7, kecamatan:[
+    {name:"Balikpapan Utara", ffmc:79, fwi:5, n_grid_ffmc:4, n_grid_fwi:4},
+    {name:"Balikpapan Selatan", ffmc:77, fwi:3, n_grid_ffmc:3, n_grid_fwi:3},
+  ]},
+  {name:"Kota Bontang", ffmc:80, fwi:5, n_grid_ffmc:5, n_grid_fwi:5, kecamatan:[
+    {name:"Bontang Utara", ffmc:80, fwi:5, n_grid_ffmc:5, n_grid_fwi:5},
+  ]},
+  {name:"Kab. Kutai Kartanegara", ffmc:87, fwi:11, n_grid_ffmc:22, n_grid_fwi:22, kecamatan:[
+    {name:"Muara Kaman", ffmc:89, fwi:13, n_grid_ffmc:5, n_grid_fwi:5},
+    {name:"Kota Bangun", ffmc:87, fwi:11, n_grid_ffmc:5, n_grid_fwi:5},
+    {name:"Tenggarong", ffmc:85, fwi:9, n_grid_ffmc:12, n_grid_fwi:12},
+  ]},
+  {name:"Kab. Kutai Timur", ffmc:90, fwi:15, n_grid_ffmc:26, n_grid_fwi:26, kecamatan:[
+    {name:"Sangatta Utara", ffmc:91, fwi:16, n_grid_ffmc:10, n_grid_fwi:10},
+    {name:"Bengalon", ffmc:90, fwi:15, n_grid_ffmc:16, n_grid_fwi:16},
+  ]},
+  {name:"Kab. Kutai Barat", ffmc:84, fwi:8, n_grid_ffmc:19, n_grid_fwi:19, kecamatan:[
+    {name:"Barong Tongkok", ffmc:85, fwi:9, n_grid_ffmc:9, n_grid_fwi:9},
+    {name:"Melak", ffmc:83, fwi:7, n_grid_ffmc:10, n_grid_fwi:10},
+  ]},
+  {name:"Kab. Paser", ffmc:79, fwi:5, n_grid_ffmc:14, n_grid_fwi:14, kecamatan:[
+    {name:"Tanah Grogot", ffmc:79, fwi:5, n_grid_ffmc:14, n_grid_fwi:14},
+  ]},
+  {name:"Kab. Penajam Paser Utara", ffmc:81, fwi:6, n_grid_ffmc:10, n_grid_fwi:10, kecamatan:[
+    {name:"Penajam", ffmc:81, fwi:6, n_grid_ffmc:10, n_grid_fwi:10},
+  ]},
+  {name:"Kab. Berau", ffmc:75, fwi:3, n_grid_ffmc:21, n_grid_fwi:21, kecamatan:[
+    {name:"Tanjung Redeb", ffmc:75, fwi:3, n_grid_ffmc:21, n_grid_fwi:21},
+  ]},
+  {name:"Kab. Mahakam Ulu", ffmc:70, fwi:2, n_grid_ffmc:12, n_grid_fwi:12, kecamatan:[
+    {name:"Long Bagun", ffmc:70, fwi:2, n_grid_ffmc:12, n_grid_fwi:12},
+  ]},
 ];
 
 function fallbackDays(){
@@ -241,17 +292,20 @@ function trendForRegion(name){
   return {label:'Stabil', color:'text-amber-400', icon:'fa-arrows-h'};
 }
 
-function panduanUmum(fwiCls, nama){
+function panduanUmum(fwiCls, ffmcCls, nama){
   if(fwiCls==='ekstrim'){
-    return `<span class="text-purple-400 font-bold">🚨 SIAGA I:</span> Waspada tinggi di ${nama} — prioritaskan patroli darat harian, siapkan sumber daya pemadaman, dan pantau titik api secara intensif.`;
+    return `<span class="text-purple-400 font-bold">🚨 SIAGA I:</span> Intensitas api berpotensi sangat besar &amp; sulit dikendalikan bila kebakaran terjadi di ${nama}. Tingkatkan kesiapsiagaan personel &amp; alat pemadam, hindari aktivitas bakar lahan sama sekali, dan pantau titik panas satelit lebih sering dari biasanya.`;
   }
   if(fwiCls==='tinggi'){
-    return `<span class="text-red-400 font-bold">⚠️ SIAGA II:</span> Tingkatkan kewaspadaan di ${nama} — gencarkan patroli, awasi area rawan (lahan gambut, perkebunan), siagakan unit pemadam.`;
+    let extra = ffmcCls==='ekstrim' || ffmcCls==='tinggi'
+      ? ' Permukaan lahan (serasah, ranting kering) juga tercatat sangat mudah tersulut — percikan kecil pun berisiko.'
+      : '';
+    return `<span class="text-red-400 font-bold">⚠️ SIAGA II:</span> Api berpotensi cepat membesar &amp; menyulitkan pemadaman bila terjadi di ${nama}.${extra} Perketat patroli di area rawan (lahan gambut, semak, perkebunan).`;
   }
   if(fwiCls==='sedang'){
-    return `<span class="text-amber-400 font-bold">🛡️ WASPADA:</span> Sosialisasikan larangan membuka lahan dengan bakar ke masyarakat di sekitar ${nama}, lakukan pengecekan berkala.`;
+    return `<span class="text-amber-400 font-bold">🛡️ WASPADA:</span> Kondisi cuaca di ${nama} cukup mendukung penyebaran api jika ada sumber penyulut. Hindari membuka lahan dengan cara dibakar, dan lakukan pemantauan berkala.`;
   }
-  return `<span class="text-blue-400 font-bold">ℹ️ MONITORING:</span> Kondisi relatif aman di ${nama}. Pantau perkembangan citra hotspot satelit secara berkala.`;
+  return `<span class="text-blue-400 font-bold">ℹ️ MONITORING:</span> Kondisi cuaca di ${nama} relatif kurang mendukung penyebaran api saat ini. Tetap pantau perkembangan, karena nilai FFMC/FWI bisa berubah cepat mengikuti cuaca.`;
 }
 
 function render(){
@@ -284,6 +338,22 @@ function render(){
   document.getElementById('gaugeMarker').style.left = pct + '%';
   document.getElementById('gaugeVal').textContent = avg.toFixed(1);
 
+  const ffmcVals = day.regions.map(r=>Number(r.ffmc)||0);
+  const avgFfmc = ffmcVals.reduce((a,b)=>a+b,0) / ffmcVals.length;
+  const clsFfmc = classifyFFMC(avgFfmc);
+  const heroStatusFfmc = document.getElementById('heroStatusFfmc');
+  heroStatusFfmc.textContent = CLASS_LABEL[clsFfmc] + ' · FFMC ' + avgFfmc.toFixed(1);
+  heroStatusFfmc.style.color = CLASS_HEX[clsFfmc];
+
+  const topFfmc = [...day.regions].sort((a,b)=>(b.ffmc||0)-(a.ffmc||0))[0];
+  const topFfmcEl = document.getElementById('heroTopRegionFfmc');
+  topFfmcEl.textContent = topFfmc.name + ' (FFMC ' + topFfmc.ffmc + ')';
+  topFfmcEl.style.color = CLASS_HEX[classifyFFMC(topFfmc.ffmc)];
+
+  const pctFfmc = Math.min(100, (avgFfmc/101)*100);
+  document.getElementById('gaugeMarkerFfmc').style.left = pctFfmc + '%';
+  document.getElementById('gaugeValFfmc').textContent = avgFfmc.toFixed(1);
+
   const counts = {rendah:0, sedang:0, tinggi:0, ekstrim:0};
   day.regions.forEach(r=> counts[classifyFWI(r.fwi)]++ );
   const summaryColor = { rendah:'border-blue-500 text-blue-400', sedang:'border-amber-500 text-amber-400', tinggi:'border-red-500 text-red-400', ekstrim:'border-purple-500 text-purple-400' };
@@ -306,7 +376,6 @@ function render(){
     const fc = classifyFFMC(r.ffmc);
     const wc = classifyFWI(r.fwi);
     const tren = trendForRegion(r.name);
-    const gridCount = (r.n_grid_fwi ?? r.n_grid_ffmc);
     return `
     <tr class="hover:bg-slate-700/30 transition duration-150">
       <td class="py-3.5 px-5 font-bold text-slate-100 cursor-pointer hover:text-blue-400" onclick="openDetail('${r.name.replace(/'/g,"\\'")}')">
@@ -321,9 +390,9 @@ function render(){
       <td class="py-3.5 px-4 text-center ${tren.color} font-semibold text-xs">
         <i class="fa-solid ${tren.icon} mr-1"></i>${tren.label}
       </td>
-      <td class="py-3.5 px-5 text-xs text-slate-300 leading-relaxed">${panduanUmum(wc, r.name)}</td>
-      <td class="py-3.5 px-4 text-center text-xs text-slate-400">
-        ${gridCount != null ? gridCount + ' titik' : '—'}
+      <td class="py-3.5 px-5 text-xs text-slate-300 leading-relaxed">${panduanUmum(wc, fc, r.name)}</td>
+      <td class="py-3.5 px-4 text-center text-xs">
+        ${renderKecamatanCell(r)}
       </td>
     </tr>`;
   }).join('');
@@ -337,6 +406,47 @@ function render(){
   });
 }
 
+function renderKecamatanCell(r){
+  const kec = r.kecamatan;
+  if(!kec || kec.length===0){
+    return `<span class="text-slate-500 italic">belum ada rincian</span>`;
+  }
+  const worst = kec[0]; // sudah diurutkan terparah dulu dari backend
+  const wc = classifyFWI(worst.fwi);
+  return `
+    <button onclick="event.stopPropagation(); openDetail('${r.name.replace(/'/g,"\\'")}')"
+            class="text-left hover:bg-slate-700/50 rounded-lg px-2 py-1 -mx-2 transition w-full">
+      <div class="text-slate-300 font-medium">${kec.length} kecamatan</div>
+      <div class="${CLASS_BADGE[wc].split(' ')[1]} text-[11px] mt-0.5">terparah: ${worst.name} (FWI ${worst.fwi ?? '—'})</div>
+    </button>`;
+}
+
+function renderKecamatanTable(regionName, kecList){
+  if(!kecList || kecList.length===0){
+    return `<div class="text-xs text-slate-500 italic text-center py-4">Rincian kecamatan belum tersedia untuk wilayah ini.</div>`;
+  }
+  const rows = kecList.map(k=>{
+    const fc = classifyFFMC(k.ffmc), wc = classifyFWI(k.fwi);
+    return `
+    <tr class="border-b border-slate-700/50">
+      <td class="py-2 pr-3 text-slate-200">${k.name}</td>
+      <td class="py-2 px-2 text-center"><span class="${CLASS_BADGE[fc]} text-[10px] font-semibold px-1.5 py-0.5 rounded border">${k.ffmc ?? '—'}</span></td>
+      <td class="py-2 px-2 text-center"><span class="${CLASS_BADGE[wc]} text-[10px] font-semibold px-1.5 py-0.5 rounded border">${k.fwi ?? '—'}</span></td>
+    </tr>`;
+  }).join('');
+  return `
+    <table class="w-full text-xs">
+      <thead>
+        <tr class="text-slate-400 text-[10px] uppercase border-b border-slate-700">
+          <th class="text-left py-1.5 pr-3">Kecamatan</th>
+          <th class="py-1.5 px-2">FFMC</th>
+          <th class="py-1.5 px-2">FWI</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
 function openDetail(name){
   const day = currentDay();
   const r = day.regions.find(x=>x.name===name);
@@ -345,23 +455,27 @@ function openDetail(name){
   document.getElementById('modalDate').textContent = fmtDateFull(day.date);
   const fc = classifyFFMC(r.ffmc), wc = classifyFWI(r.fwi);
   document.getElementById('modalBody').innerHTML = `
-    <div class="flex justify-between items-center bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3">
-      <div>
-        <div class="text-[11px] text-slate-400 uppercase font-bold">FFMC</div>
-        <div class="text-lg font-bold">${r.ffmc ?? '—'}</div>
+    <div class="flex gap-3">
+      <div class="flex-1 flex justify-between items-center bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3">
+        <div>
+          <div class="text-[11px] text-slate-400 uppercase font-bold">FFMC rata-rata</div>
+          <div class="text-lg font-bold">${r.ffmc ?? '—'}</div>
+        </div>
+        <span class="${CLASS_BADGE[fc]} font-semibold px-2.5 py-1 rounded text-xs border">${CLASS_LABEL[fc]}</span>
       </div>
-      <span class="${CLASS_BADGE[fc]} font-semibold px-2.5 py-1 rounded text-xs border">${CLASS_LABEL[fc]}</span>
-    </div>
-    <div class="flex justify-between items-center bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3">
-      <div>
-        <div class="text-[11px] text-slate-400 uppercase font-bold">FWI</div>
-        <div class="text-lg font-bold">${r.fwi ?? '—'}</div>
+      <div class="flex-1 flex justify-between items-center bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3">
+        <div>
+          <div class="text-[11px] text-slate-400 uppercase font-bold">FWI rata-rata</div>
+          <div class="text-lg font-bold">${r.fwi ?? '—'}</div>
+        </div>
+        <span class="${CLASS_BADGE[wc]} font-semibold px-2.5 py-1 rounded text-xs border">${CLASS_LABEL[wc]}</span>
       </div>
-      <span class="${CLASS_BADGE[wc]} font-semibold px-2.5 py-1 rounded text-xs border">${CLASS_LABEL[wc]}</span>
     </div>
-    <div class="text-xs text-slate-400 space-y-1 pt-1">
-      <div>Titik grid FFMC dirata-ratakan: <b class="text-slate-300">${r.n_grid_ffmc ?? '—'}</b></div>
-      <div>Titik grid FWI dirata-ratakan: <b class="text-slate-300">${r.n_grid_fwi ?? '—'}</b></div>
+    <div class="pt-1">
+      <div class="text-[11px] text-slate-400 uppercase font-bold mb-2">Rincian per kecamatan (${r.kecamatan ? r.kecamatan.length : 0})</div>
+      <div class="max-h-64 overflow-y-auto pr-1">
+        ${renderKecamatanTable(name, r.kecamatan)}
+      </div>
     </div>
   `;
   document.getElementById('detailModal').classList.remove('hidden');
