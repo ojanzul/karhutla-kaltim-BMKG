@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-18T12:13",
+  "generated_at": "2026-07-18T12:21",
   "method": "zonal_kecamatan",
   "days": [
     {
@@ -89,6 +89,13 @@
               "fwi": 0.0,
               "n_grid_ffmc": 5,
               "n_grid_fwi": 4
+            },
+            {
+              "name": "Tanjung Redeb",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
             },
             {
               "name": "Teluk Bayur",
@@ -347,6 +354,13 @@
               "n_grid_fwi": 0
             },
             {
+              "name": "Sanga Sanga",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
               "name": "Sebulu",
               "ffmc": 83.0,
               "fwi": null,
@@ -486,6 +500,13 @@
               "ffmc": 82.6,
               "fwi": null,
               "n_grid_ffmc": 9,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Muara Bengkal",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
               "n_grid_fwi": 0
             }
           ]
@@ -679,10 +700,24 @@
               "n_grid_fwi": 0
             },
             {
+              "name": "Balikpapan Tengah",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
               "name": "Balikpapan Timur",
               "ffmc": 84.0,
               "fwi": null,
               "n_grid_ffmc": 1,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Balikpapan Utara",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
               "n_grid_fwi": 0
             }
           ]
@@ -707,6 +742,13 @@
               "fwi": 3.0,
               "n_grid_ffmc": 1,
               "n_grid_fwi": 1
+            },
+            {
+              "name": "Bontang Barat",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
             }
           ]
         },
@@ -718,6 +760,13 @@
           "n_grid_fwi": 0,
           "kecamatan": [
             {
+              "name": "Loa Janan Ilir",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
               "name": "Palaran",
               "ffmc": 86.0,
               "fwi": null,
@@ -725,10 +774,59 @@
               "n_grid_fwi": 0
             },
             {
+              "name": "Samarinda Ilir",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Samarinda Kota",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Samarinda Seberang",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Samarinda Ulu",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
               "name": "Samarinda Utara",
               "ffmc": 83.3,
               "fwi": null,
               "n_grid_ffmc": 7,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Sambutan",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Sungai Kunjang",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Sungai Pinang",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
               "n_grid_fwi": 0
             }
           ]
@@ -1470,6 +1568,13 @@
               "n_grid_fwi": 1
             },
             {
+              "name": "Bontang Barat",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
               "name": "Bontang Selatan",
               "ffmc": 73.0,
               "fwi": null,
@@ -1525,6 +1630,20 @@
               "ffmc": 79.0,
               "fwi": null,
               "n_grid_ffmc": 1,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Samarinda Kota",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Samarinda Seberang",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
               "n_grid_fwi": 0
             },
             {
@@ -1639,6 +1758,13 @@
               "fwi": 0.0,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 4
+            },
+            {
+              "name": "Tanjung Redeb",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
             }
           ]
         },
@@ -2241,6 +2367,20 @@
               "fwi": 6.0,
               "n_grid_ffmc": 5,
               "n_grid_fwi": 2
+            },
+            {
+              "name": "Balikpapan Kota",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Balikpapan Selatan",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
             }
           ]
         },
@@ -2303,6 +2443,20 @@
               "n_grid_fwi": 0
             },
             {
+              "name": "Samarinda Ilir",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Samarinda Kota",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
               "name": "Samarinda Seberang",
               "ffmc": 61.0,
               "fwi": null,
@@ -2310,10 +2464,24 @@
               "n_grid_fwi": 0
             },
             {
+              "name": "Samarinda Ulu",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
+              "n_grid_fwi": 0
+            },
+            {
               "name": "Sambutan",
               "ffmc": 65.5,
               "fwi": null,
               "n_grid_ffmc": 8,
+              "n_grid_fwi": 0
+            },
+            {
+              "name": "Sungai Kunjang",
+              "ffmc": null,
+              "fwi": null,
+              "n_grid_ffmc": 0,
               "n_grid_fwi": 0
             },
             {
