@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIAGA KARHUTLA — Kalimantan Timur</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen">
+
+<header class="bg-slate-800 border-b border-slate-700 shadow-lg sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="flex items-center gap-3">
+      <div class="bg-red-600 p-2.5 rounded-lg text-white shadow-md shadow-red-500/20">
+        <i class="fa-solid fa-fire text-2xl"></i>
+      </div>
+      <div>
+        <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex flex-wrap items-center gap-2">
+          SISTEM SIAGA KARHUTLA — KALIMANTAN TIMUR
+          <span class="text-[10px] bg-amber-500/20 text-amber-400 font-medium px-2 py-0.5 rounded-full border border-amber-500/30">FFMC &amp; FWI · SPARTAN BMKG</span>
+        </h1>
+        <p class="text-xs text-slate-400">Pemantauan 10 kabupaten/kota, sumber: spartan.bmkg.go.id</p>
+      </div>
+    </div>
+    <div class="flex flex-col items-end gap-2 w-full md:w-auto">
+      <div id="statusLine" class="text-xs text-slate-400">memuat data...</div>
+      <div class="flex items-center gap-2 w-full md:w-auto">
+        <div class="flex items-center gap-2 bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-600 text-xs flex-1 md:flex-none justify-center">
+          <i class="fa-regular fa-calendar text-blue-400"></i>
+          <span>Data target: <span id="headerTanggal" class="font-bold">—</span></span>
+        </div>
+        <button id="refreshBtn" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-200 text-xs font-semibold py-2 px-3 rounded-lg transition flex items-center gap-1.5">
+          <i class="fa-solid fa-rotate"></i> <span class="hidden sm:inline">Perbarui</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+  <section id="dayTabs" class="flex flex-wrap gap-2"></section>
+
+  <section class="bg-slate-800 p-5 md:p-6 rounded-xl border border-slate-700 shadow-lg">
+    <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status siaga rata-rata provinsi (FWI)</div>
+        <div id="heroStatus" class="text-2xl font-bold mt-1">—</div>
+      </div>
+      <div class="md:text-right">
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Wilayah risiko tertinggi</div>
+        <div id="heroTopRegion" class="text-base font-semibold mt-1">—</div>
+      </div>
+    </div>
+    <div class="h-3 rounded-full relative" style="background:linear-gradient(90deg,#3b82f6 0%,#3b82f6 22%,#f59e0b 22%,#f59e0b 48%,#ef4444 48%,#ef4444 75%,#a855f7 75%,#a855f7 100%)">
+      <div id="gaugeMarker" class="absolute -top-2 w-[3px] h-7 bg-white rounded" style="left:0%;">
+        <span id="gaugeVal" class="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-mono text-slate-200 whitespace-nowrap">0</span>
+      </div>
+    </div>
+    <div class="flex justify-between mt-2 text-[10px] font-mono text-slate-500">
+      <span>0 · Rendah</span><span>2</span><span>Sedang</span><span>7</span><span>Tinggi</span><span>13</span><span>Ekstrim →</span>
+    </div>
+  </section>
+
+  <section id="summaryRow" class="grid grid-cols-2 md:grid-cols-4 gap-3"></section>
+
+  <section class="bg-slate-800 p-5 md:p-6 rounded-xl border border-slate-700 shadow-lg">
+    <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-circle-question text-blue-500"></i> Apa itu FFMC &amp; FWI?
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="font-mono font-bold text-xs text-blue-400 bg-blue-950 px-2 py-0.5 rounded border border-blue-800">FFMC</span>
+          <h3 class="font-bold text-sm text-slate-100">Fine Fuel Moisture Code</h3>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed mb-3">Mengukur tingkat kekeringan bahan bakar ringan di permukaan tanah — dedaunan gugur, ranting kecil, alang-alang. Bahan setipis ini bereaksi cepat terhadap panas dan angin, jadi nilainya bisa berubah drastis dalam hitungan jam.</p>
+        <div class="text-xs bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-300">Skala 0–101. Makin <b class="text-blue-400">tinggi</b>, permukaan makin kering dan makin gampang tersulut walau hanya dari percikan kecil.</div>
+      </div>
+      <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="font-mono font-bold text-xs text-red-400 bg-red-950 px-2 py-0.5 rounded border border-red-800">FWI</span>
+          <h3 class="font-bold text-sm text-slate-100">Fire Weather Index</h3>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed mb-3">Menggabungkan kekeringan bahan bakar dengan kondisi cuaca (angin, kelembapan) untuk memperkirakan seberapa besar dan cepat api bisa membesar apabila kebakaran benar-benar terjadi. Ini indeks yang dipakai sebagai status siaga utama di dashboard ini.</p>
+        <div class="text-xs bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-300">Makin <b class="text-red-400">tinggi</b>, makin besar potensi intensitas api dan makin sulit dikendalikan bila kebakaran terjadi.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-slate-800 rounded-xl border border-slate-700 shadow-xl overflow-hidden">
+    <div class="p-5 border-b border-slate-700 bg-slate-800/50 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+      <div>
+        <h3 class="text-md font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-map-location-dot text-red-500"></i> Data wilayah <span id="tableDateLabel" class="text-blue-400 font-extrabold"></span>
+        </h3>
+        <p class="text-xs text-slate-400 mt-1">Klik nama kabupaten untuk lihat rincian nilai mentah &amp; jumlah titik grid yang dirata-ratakan.</p>
+      </div>
+      <div class="text-xs text-slate-400">
+        <span class="inline-block px-2 py-0.5 rounded bg-slate-700 border border-slate-600"><i class="fa-solid fa-circle-info text-blue-400 mr-1"></i> Metode: rata-rata grid terdekat per kabupaten</span>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse min-w-[880px]">
+        <thead>
+          <tr class="bg-slate-900/50 text-slate-300 uppercase text-[11px] font-bold tracking-wider border-b border-slate-700">
+            <th class="py-3 px-5 cursor-pointer select-none hover:text-blue-400" data-sort="name">Kabupaten / kota</th>
+            <th class="py-3 px-4 text-center cursor-pointer select-none hover:text-blue-400" data-sort="ffmc">Indeks FFMC</th>
+            <th class="py-3 px-4 text-center cursor-pointer select-none hover:text-blue-400" data-sort="fwi">Indeks FWI</th>
+            <th class="py-3 px-4 text-center">Tren besok</th>
+            <th class="py-3 px-5 w-[32%]">Panduan umum tindakan</th>
+            <th class="py-3 px-4 text-center">Titik grid</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody" class="divide-y divide-slate-700 text-sm"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="text-xs text-slate-500 leading-relaxed pb-4">
+    <p><b class="text-slate-400">Klasifikasi.</b> FFMC — Rendah &lt;76 · Sedang 76–83 · Tinggi 83–89 · Ekstrim ≥89. FWI — Rendah &lt;2 · Sedang 2–7 · Tinggi 7–13 · Ekstrim ≥13. Ambang mengikuti kelas umum SPBK/FWI Kanada yang diadopsi BMKG; rujuk legenda resmi di peta SPARTAN untuk presisi tinggi.</p>
+    <p class="mt-2"><b class="text-slate-400">Tentang data.</b> Diambil otomatis dari repositori publik yang diperbarui harian oleh pipeline unduh SPARTAN — BMKG. Sumber: <a href="https://spartan.bmkg.go.id/MapInteractive" target="_blank" class="text-blue-400 hover:underline">spartan.bmkg.go.id</a>.</p>
+    <p class="mt-2"><b class="text-slate-400">Catatan akurasi.</b> Nilai per kabupaten dihitung dari grid terdekat ke satu titik pusat kabupaten (nearest-centroid), bukan zonal-statistics dengan batas administrasi resmi. Untuk kabupaten yang sangat luas (Kutai Timur, Kutai Barat, Kutai Kartanegara) ini hanya perkiraan kasar.</p>
+    <p class="mt-2"><b class="text-slate-400">Panduan tindakan.</b> Teks "panduan umum tindakan" di tabel bersifat referensi umum berbasis ambang FWI, bukan instruksi resmi BPBD/BMKG. Keputusan operasional tetap mengikuti arahan instansi berwenang setempat.</p>
+  </footer>
+
+</main>
+
+<div id="detailModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+    <div class="flex justify-between items-start border-b border-slate-700 pb-3">
+      <div>
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-circle-nodes text-amber-500"></i> <span id="modalTitle">Kabupaten</span>
+        </h3>
+        <p class="text-xs text-slate-400 mt-0.5" id="modalDate">—</p>
+      </div>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-white transition bg-slate-700 hover:bg-slate-600 p-1.5 rounded-md">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div id="modalBody" class="space-y-3 text-sm"></div>
+    <div class="pt-2 border-t border-slate-700 text-[11px] text-slate-500">
+      Rata-rata dihitung dari titik grid geojson terdekat dengan pusat kabupaten (metode nearest-centroid).
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA_URL = "https://raw.githubusercontent.com/ojanzul/karhutla-kaltim-BMKG/main/data.json";
+
+const FALLBACK_REGIONS = [
+  {name:"Kota Samarinda", ffmc:82, fwi:6, n_grid_ffmc:9, n_grid_fwi:9},
+  {name:"Kota Balikpapan", ffmc:78, fwi:4, n_grid_ffmc:7, n_grid_fwi:7},
+  {name:"Kota Bontang", ffmc:80, fwi:5, n_grid_ffmc:5, n_grid_fwi:5},
+  {name:"Kab. Kutai Kartanegara", ffmc:87, fwi:11, n_grid_ffmc:22, n_grid_fwi:22},
+  {name:"Kab. Kutai Timur", ffmc:90, fwi:15, n_grid_ffmc:26, n_grid_fwi:26},
+  {name:"Kab. Kutai Barat", ffmc:84, fwi:8, n_grid_ffmc:19, n_grid_fwi:19},
+  {name:"Kab. Paser", ffmc:79, fwi:5, n_grid_ffmc:14, n_grid_fwi:14},
+  {name:"Kab. Penajam Paser Utara", ffmc:81, fwi:6, n_grid_ffmc:10, n_grid_fwi:10},
+  {name:"Kab. Berau", ffmc:75, fwi:3, n_grid_ffmc:21, n_grid_fwi:21},
+  {name:"Kab. Mahakam Ulu", ffmc:70, fwi:2, n_grid_ffmc:12, n_grid_fwi:12},
+];
+
+function fallbackDays(){
+  const out = [];
+  for(let i=0;i<3;i++){
+    const d = new Date();
+    d.setDate(d.getDate()+i);
+    out.push({ date: d.toISOString().slice(0,10), offset:i, regions: FALLBACK_REGIONS, isFallback:true });
+  }
+  return out;
+}
+
+let payload = { days: fallbackDays() };
+let activeDayIdx = 0;
+let sortKey = null;
+let sortAsc = true;
+
+const CLASS_LABEL = {rendah:'RENDAH', sedang:'SEDANG', tinggi:'TINGGI', ekstrim:'EKSTRIM'};
+const CLASS_BADGE = {
+  rendah: 'bg-blue-950 text-blue-400 border-blue-700/50',
+  sedang: 'bg-amber-950 text-amber-400 border-amber-700/60',
+  tinggi: 'bg-red-900/60 text-red-300 border-red-700',
+  ekstrim: 'bg-purple-900/60 text-purple-300 border-purple-700',
+};
+const CLASS_HEX = { rendah:'#3b82f6', sedang:'#f59e0b', tinggi:'#ef4444', ekstrim:'#a855f7' };
+const DAY_NAMES = ['Hari ini','Besok','Lusa'];
+
+function classifyFFMC(v){
+  if(v==null) return 'sedang';
+  if(v>=89) return 'ekstrim';
+  if(v>=83) return 'tinggi';
+  if(v>=76) return 'sedang';
+  return 'rendah';
+}
+function classifyFWI(v){
+  if(v==null) return 'sedang';
+  if(v>=13) return 'ekstrim';
+  if(v>=7) return 'tinggi';
+  if(v>=2) return 'sedang';
+  return 'rendah';
+}
+
+function fmtDate(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('id-ID', {day:'numeric', month:'short'});
+}
+function fmtDateFull(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+
+function renderTabs(){
+  const wrap = document.getElementById('dayTabs');
+  wrap.innerHTML = payload.days.map((day, i)=>{
+    const active = i===activeDayIdx;
+    const cls = active
+      ? "bg-blue-600 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg border border-blue-500 shadow-sm"
+      : "bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-medium px-4 py-2 rounded-lg border border-slate-700";
+    const label = DAY_NAMES[day.offset] || ('H+' + day.offset);
+    return `<button data-idx="${i}" class="${cls}">${label} · ${fmtDate(day.date)}</button>`;
+  }).join('');
+  wrap.querySelectorAll('button').forEach(el=>{
+    el.addEventListener('click', ()=>{ activeDayIdx = Number(el.dataset.idx); render(); });
+  });
+}
+
+function currentDay(){ return payload.days[activeDayIdx] || payload.days[0]; }
+
+function trendForRegion(name){
+  const nextDay = payload.days[activeDayIdx+1];
+  if(!nextDay) return {label:'—', color:'text-slate-500', icon:'fa-minus'};
+  const cur = currentDay().regions.find(r=>r.name===name);
+  const nxt = nextDay.regions.find(r=>r.name===name);
+  if(!cur || !nxt || cur.fwi==null || nxt.fwi==null) return {label:'—', color:'text-slate-500', icon:'fa-minus'};
+  const diff = nxt.fwi - cur.fwi;
+  if(diff > 0.5) return {label:'Naik', color:'text-red-400', icon:'fa-arrow-trend-up'};
+  if(diff < -0.5) return {label:'Turun', color:'text-emerald-400', icon:'fa-arrow-trend-down'};
+  return {label:'Stabil', color:'text-amber-400', icon:'fa-arrows-h'};
+}
+
+function panduanUmum(fwiCls, nama){
+  if(fwiCls==='ekstrim'){
+    return `<span class="text-purple-400 font-bold">🚨 SIAGA I:</span> Waspada tinggi di ${nama} — prioritaskan patroli darat harian, siapkan sumber daya pemadaman, dan pantau titik api secara intensif.`;
+  }
+  if(fwiCls==='tinggi'){
+    return `<span class="text-red-400 font-bold">⚠️ SIAGA II:</span> Tingkatkan kewaspadaan di ${nama} — gencarkan patroli, awasi area rawan (lahan gambut, perkebunan), siagakan unit pemadam.`;
+  }
+  if(fwiCls==='sedang'){
+    return `<span class="text-amber-400 font-bold">🛡️ WASPADA:</span> Sosialisasikan larangan membuka lahan dengan bakar ke masyarakat di sekitar ${nama}, lakukan pengecekan berkala.`;
+  }
+  return `<span class="text-blue-400 font-bold">ℹ️ MONITORING:</span> Kondisi relatif aman di ${nama}. Pantau perkembangan citra hotspot satelit secara berkala.`;
+}
+
+function render(){
+  renderTabs();
+  const day = currentDay();
+  document.getElementById('headerTanggal').textContent = day ? fmtDate(day.date) : '—';
+  document.getElementById('tableDateLabel').textContent = day ? '· ' + fmtDate(day.date) : '';
+
+  if(!day || !day.regions || day.regions.length===0){
+    document.getElementById('heroStatus').textContent = '—';
+    document.getElementById('heroTopRegion').textContent = '—';
+    document.getElementById('summaryRow').innerHTML = '';
+    document.getElementById('tableBody').innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500 italic">Belum ada data untuk tanggal ini.</td></tr>`;
+    return;
+  }
+
+  const fwiVals = day.regions.map(r=>Number(r.fwi)||0);
+  const avg = fwiVals.reduce((a,b)=>a+b,0) / fwiVals.length;
+  const cls = classifyFWI(avg);
+  const heroStatus = document.getElementById('heroStatus');
+  heroStatus.textContent = CLASS_LABEL[cls] + ' · FWI ' + avg.toFixed(1);
+  heroStatus.style.color = CLASS_HEX[cls];
+
+  const top = [...day.regions].sort((a,b)=>(b.fwi||0)-(a.fwi||0))[0];
+  const topEl = document.getElementById('heroTopRegion');
+  topEl.textContent = top.name + ' (FWI ' + top.fwi + ')';
+  topEl.style.color = CLASS_HEX[classifyFWI(top.fwi)];
+
+  const pct = Math.min(100, (avg/20)*100);
+  document.getElementById('gaugeMarker').style.left = pct + '%';
+  document.getElementById('gaugeVal').textContent = avg.toFixed(1);
+
+  const counts = {rendah:0, sedang:0, tinggi:0, ekstrim:0};
+  day.regions.forEach(r=> counts[classifyFWI(r.fwi)]++ );
+  const summaryColor = { rendah:'border-blue-500 text-blue-400', sedang:'border-amber-500 text-amber-400', tinggi:'border-red-500 text-red-400', ekstrim:'border-purple-500 text-purple-400' };
+  document.getElementById('summaryRow').innerHTML = ['rendah','sedang','tinggi','ekstrim'].map(k=>`
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 border-t-4 ${summaryColor[k]}">
+      <div class="text-2xl font-bold ${summaryColor[k].split(' ')[1]}">${counts[k]}</div>
+      <div class="text-xs text-slate-400 mt-0.5">Wilayah — ${CLASS_LABEL[k]}</div>
+    </div>`).join('');
+
+  let rows = [...day.regions];
+  if(sortKey){
+    rows.sort((a,b)=>{
+      let av=a[sortKey], bv=b[sortKey];
+      if(typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+      return sortAsc ? (av||0)-(bv||0) : (bv||0)-(av||0);
+    });
+  }
+
+  document.getElementById('tableBody').innerHTML = rows.map(r=>{
+    const fc = classifyFFMC(r.ffmc);
+    const wc = classifyFWI(r.fwi);
+    const tren = trendForRegion(r.name);
+    const gridCount = (r.n_grid_fwi ?? r.n_grid_ffmc);
+    return `
+    <tr class="hover:bg-slate-700/30 transition duration-150">
+      <td class="py-3.5 px-5 font-bold text-slate-100 cursor-pointer hover:text-blue-400" onclick="openDetail('${r.name.replace(/'/g,"\\'")}')">
+        <i class="fa-solid fa-location-crosshairs text-slate-500 text-xs mr-1.5"></i>${r.name}
+      </td>
+      <td class="py-3.5 px-4 text-center">
+        <span class="${CLASS_BADGE[fc]} font-semibold px-2.5 py-1 rounded text-xs border">${r.ffmc ?? '—'} · ${CLASS_LABEL[fc]}</span>
+      </td>
+      <td class="py-3.5 px-4 text-center">
+        <span class="${CLASS_BADGE[wc]} font-semibold px-2.5 py-1 rounded text-xs border">${r.fwi ?? '—'} · ${CLASS_LABEL[wc]}</span>
+      </td>
+      <td class="py-3.5 px-4 text-center ${tren.color} font-semibold text-xs">
+        <i class="fa-solid ${tren.icon} mr-1"></i>${tren.label}
+      </td>
+      <td class="py-3.5 px-5 text-xs text-slate-300 leading-relaxed">${panduanUmum(wc, r.name)}</td>
+      <td class="py-3.5 px-4 text-center text-xs text-slate-400">
+        ${gridCount != null ? gridCount + ' titik' : '—'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.querySelectorAll('thead th[data-sort]').forEach(th=>{
+    th.onclick = ()=>{
+      const key = th.dataset.sort;
+      if(sortKey===key){ sortAsc = !sortAsc; } else { sortKey = key; sortAsc = true; }
+      render();
+    };
+  });
+}
+
+function openDetail(name){
+  const day = currentDay();
+  const r = day.regions.find(x=>x.name===name);
+  if(!r) return;
+  document.getElementById('modalTitle').textContent = name;
+  document.getElementById('modalDate').textContent = fmtDateFull(day.date);
+  const fc = classifyFFMC(r.ffmc), wc = classifyFWI(r.fwi);
+  document.getElementById('modalBody').innerHTML = `
+    <div class="flex justify-between items-center bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3">
+      <div>
+        <div class="text-[11px] text-slate-400 uppercase font-bold">FFMC</div>
+        <div class="text-lg font-bold">${r.ffmc ?? '—'}</div>
+      </div>
+      <span class="${CLASS_BADGE[fc]} font-semibold px-2.5 py-1 rounded text-xs border">${CLASS_LABEL[fc]}</span>
+    </div>
+    <div class="flex justify-between items-center bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3">
+      <div>
+        <div class="text-[11px] text-slate-400 uppercase font-bold">FWI</div>
+        <div class="text-lg font-bold">${r.fwi ?? '—'}</div>
+      </div>
+      <span class="${CLASS_BADGE[wc]} font-semibold px-2.5 py-1 rounded text-xs border">${CLASS_LABEL[wc]}</span>
+    </div>
+    <div class="text-xs text-slate-400 space-y-1 pt-1">
+      <div>Titik grid FFMC dirata-ratakan: <b class="text-slate-300">${r.n_grid_ffmc ?? '—'}</b></div>
+      <div>Titik grid FWI dirata-ratakan: <b class="text-slate-300">${r.n_grid_fwi ?? '—'}</b></div>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.remove('hidden');
+}
+function closeModal(){
+  document.getElementById('detailModal').classList.add('hidden');
+}
+document.getElementById('detailModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'detailModal') closeModal();
+});
+
+async function fetchData(silent){
+  const statusEl = document.getElementById('statusLine');
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  if(!silent) statusEl.textContent = 'memuat data...';
+  statusEl.className = 'text-xs text-slate-400';
+  try{
+    const bust = DATA_URL + (DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+    const res = await fetch(bust, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if(!json.days || !Array.isArray(json.days) || json.days.length===0) throw new Error('format tidak dikenali');
+    payload = json;
+    activeDayIdx = 0;
+    statusEl.textContent = 'data terbaru — diperbarui ' + new Date(json.generated_at || Date.now()).toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'});
+    statusEl.className = 'text-xs text-emerald-400 font-semibold';
+  }catch(e){
+    statusEl.textContent = 'gagal memuat data live (' + e.message + ') — menampilkan contoh';
+    statusEl.className = 'text-xs text-red-400 font-semibold';
+    payload = { days: fallbackDays() };
+    activeDayIdx = 0;
+  }finally{
+    btn.disabled = false;
+    render();
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', ()=> fetchData(false));
+
+fetchData(true);
+</script>
+</body>
+</html>
