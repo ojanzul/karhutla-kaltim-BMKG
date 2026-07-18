@@ -44,7 +44,7 @@
 
   <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
     <div class="bg-slate-800 p-5 md:p-6 rounded-xl border border-slate-700 shadow-lg">
-      <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
+      <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-9">
         <div>
           <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status siaga rata-rata provinsi (FWI)</div>
           <div id="heroStatus" class="text-2xl font-bold mt-1">—</div>
@@ -54,18 +54,27 @@
           <div id="heroTopRegion" class="text-base font-semibold mt-1">—</div>
         </div>
       </div>
-      <div class="h-3 rounded-full relative" style="background:linear-gradient(90deg,#3b82f6 0%,#3b82f6 22%,#f59e0b 22%,#f59e0b 48%,#ef4444 48%,#ef4444 75%,#a855f7 75%,#a855f7 100%)">
-        <div id="gaugeMarker" class="absolute -top-2 w-[3px] h-7 bg-white rounded" style="left:0%;">
-          <span id="gaugeVal" class="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-mono text-slate-200 whitespace-nowrap">0</span>
+      <div class="relative">
+        <div class="h-3 rounded-full flex overflow-hidden">
+          <div class="h-full flex-1 bg-blue-500"></div>
+          <div class="h-full flex-1 bg-amber-500"></div>
+          <div class="h-full flex-1 bg-red-500"></div>
+          <div class="h-full flex-1 bg-purple-500"></div>
+        </div>
+        <div id="gaugeMarker" class="absolute top-1/2 -translate-y-1/2 w-[3px] h-6 bg-white rounded shadow" style="left:0%;">
+          <span id="gaugeVal" class="absolute -top-7 left-1/2 -translate-x-1/2 text-[11px] font-mono font-semibold text-slate-100 bg-slate-900 border border-slate-600 px-1.5 py-0.5 rounded whitespace-nowrap">0</span>
         </div>
       </div>
-      <div class="flex justify-between mt-2 text-[10px] font-mono text-slate-500">
-        <span>0 · Rendah</span><span>2</span><span>Sedang</span><span>7</span><span>Tinggi</span><span>13</span><span>Ekstrim →</span>
+      <div class="grid grid-cols-4 mt-2 text-[10px] font-mono text-slate-500">
+        <span class="text-left">0 · Rendah</span>
+        <span class="text-center">2 · Sedang</span>
+        <span class="text-center">7 · Tinggi</span>
+        <span class="text-right">13 · Ekstrim →</span>
       </div>
     </div>
 
     <div class="bg-slate-800 p-5 md:p-6 rounded-xl border border-slate-700 shadow-lg">
-      <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
+      <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-9">
         <div>
           <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status siaga rata-rata provinsi (FFMC)</div>
           <div id="heroStatusFfmc" class="text-2xl font-bold mt-1">—</div>
@@ -75,13 +84,22 @@
           <div id="heroTopRegionFfmc" class="text-base font-semibold mt-1">—</div>
         </div>
       </div>
-      <div class="h-3 rounded-full relative" style="background:linear-gradient(90deg,#3b82f6 0%,#3b82f6 75.2%,#f59e0b 75.2%,#f59e0b 82.2%,#ef4444 82.2%,#ef4444 88.1%,#a855f7 88.1%,#a855f7 100%)">
-        <div id="gaugeMarkerFfmc" class="absolute -top-2 w-[3px] h-7 bg-white rounded" style="left:0%;">
-          <span id="gaugeValFfmc" class="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-mono text-slate-200 whitespace-nowrap">0</span>
+      <div class="relative">
+        <div class="h-3 rounded-full flex overflow-hidden">
+          <div class="h-full flex-1 bg-blue-500"></div>
+          <div class="h-full flex-1 bg-amber-500"></div>
+          <div class="h-full flex-1 bg-red-500"></div>
+          <div class="h-full flex-1 bg-purple-500"></div>
+        </div>
+        <div id="gaugeMarkerFfmc" class="absolute top-1/2 -translate-y-1/2 w-[3px] h-6 bg-white rounded shadow" style="left:0%;">
+          <span id="gaugeValFfmc" class="absolute -top-7 left-1/2 -translate-x-1/2 text-[11px] font-mono font-semibold text-slate-100 bg-slate-900 border border-slate-600 px-1.5 py-0.5 rounded whitespace-nowrap">0</span>
         </div>
       </div>
-      <div class="flex justify-between mt-2 text-[10px] font-mono text-slate-500">
-        <span>0 · Rendah</span><span>76</span><span>Sedang</span><span>83</span><span>Tinggi</span><span>89</span><span>Ekstrim →</span>
+      <div class="grid grid-cols-4 mt-2 text-[10px] font-mono text-slate-500">
+        <span class="text-left">0 · Rendah</span>
+        <span class="text-center">76 · Sedang</span>
+        <span class="text-center">83 · Tinggi</span>
+        <span class="text-right">89 · Ekstrim →</span>
       </div>
     </div>
   </section>
@@ -144,8 +162,6 @@
   <footer class="text-xs text-slate-500 leading-relaxed pb-4">
     <p><b class="text-slate-400">Klasifikasi.</b> FFMC — Rendah &lt;76 · Sedang 76–83 · Tinggi 83–89 · Ekstrim ≥89. FWI — Rendah &lt;2 · Sedang 2–7 · Tinggi 7–13 · Ekstrim ≥13. Ambang mengikuti kelas umum SPBK/FWI Kanada yang diadopsi BMKG; rujuk legenda resmi di peta SPARTAN untuk presisi tinggi.</p>
     <p class="mt-2"><b class="text-slate-400">Tentang data.</b> Sumber: <a href="https://spartan.bmkg.go.id/MapInteractive" target="_blank" class="text-blue-400 hover:underline">spartan.bmkg.go.id</a>.</p>
-    <p class="mt-2"><b class="text-slate-400">Catatan akurasi.</b> Nilai per kabupaten dihitung dari grid terdekat ke satu titik pusat kabupaten (nearest-centroid), bukan zonal-statistics dengan batas administrasi resmi. Untuk kabupaten yang sangat luas (Kutai Timur, Kutai Barat, Kutai Kartanegara) ini hanya perkiraan kasar.</p>
-    <p class="mt-2"><b class="text-slate-400">Level data.</b> Dashboard ini menyajikan data sampai level kabupaten/kota. Breakdown per kecamatan belum tersedia karena memerlukan data batas administrasi kecamatan resmi (BIG/Kemendagri) yang belum diintegrasikan ke pipeline.</p>
     <p class="mt-2"><b class="text-slate-400">Panduan tindakan.</b> Teks "panduan umum tindakan" di tabel bersifat referensi umum berbasis ambang FWI/FFMC dan penjelasan resmi BMKG mengenai makna kedua indeks, bukan instruksi taktis atau SOP resmi BPBD/BMKG. Keputusan operasional tetap mengikuti arahan instansi berwenang setempat.</p>
   </footer>
 
@@ -229,25 +245,26 @@ let activeDayIdx = 0;
 let sortKey = null;
 let sortAsc = true;
 
-const CLASS_LABEL = {rendah:'RENDAH', sedang:'SEDANG', tinggi:'TINGGI', ekstrim:'EKSTRIM'};
+const CLASS_LABEL = {rendah:'RENDAH', sedang:'SEDANG', tinggi:'TINGGI', ekstrim:'EKSTRIM', nodata:'TANPA DATA'};
 const CLASS_BADGE = {
   rendah: 'bg-blue-950 text-blue-400 border-blue-700/50',
   sedang: 'bg-amber-950 text-amber-400 border-amber-700/60',
   tinggi: 'bg-red-900/60 text-red-300 border-red-700',
   ekstrim: 'bg-purple-900/60 text-purple-300 border-purple-700',
+  nodata: 'bg-slate-800 text-slate-500 border-slate-600',
 };
-const CLASS_HEX = { rendah:'#3b82f6', sedang:'#f59e0b', tinggi:'#ef4444', ekstrim:'#a855f7' };
+const CLASS_HEX = { rendah:'#3b82f6', sedang:'#f59e0b', tinggi:'#ef4444', ekstrim:'#a855f7', nodata:'#64748b' };
 const DAY_NAMES = ['Hari ini','Besok','Lusa'];
 
 function classifyFFMC(v){
-  if(v==null) return 'sedang';
+  if(v==null) return 'nodata';
   if(v>=89) return 'ekstrim';
   if(v>=83) return 'tinggi';
   if(v>=76) return 'sedang';
   return 'rendah';
 }
 function classifyFWI(v){
-  if(v==null) return 'sedang';
+  if(v==null) return 'nodata';
   if(v>=13) return 'ekstrim';
   if(v>=7) return 'tinggi';
   if(v>=2) return 'sedang';
@@ -308,6 +325,24 @@ function panduanUmum(fwiCls, ffmcCls, nama){
   return `<span class="text-blue-400 font-bold">ℹ️ MONITORING:</span> Kondisi cuaca di ${nama} relatif kurang mendukung penyebaran api saat ini. Tetap pantau perkembangan, karena nilai FFMC/FWI bisa berubah cepat mengikuti cuaca.`;
 }
 
+// Memetakan nilai ke posisi (0-100%) di bar gauge yang dibagi 4 SEGMEN SAMA
+// LEBAR (Rendah/Sedang/Tinggi/Ekstrim @ 25% masing-masing), supaya bar selalu
+// terlihat rapi & seimbang meskipun rentang nilai asli tiap kelas jauh
+// berbeda (mis. FFMC: Rendah 0-76 tapi Ekstrim cuma >=89). Nilai tetap
+// diposisikan proporsional DI DALAM segmen kelasnya masing-masing.
+function gaugePct(value, thresholds){
+  const v = Math.max(0, Number(value) || 0);
+  const bounds = [0, thresholds[0], thresholds[1], thresholds[2], thresholds[2] * 1.6];
+  for(let i = 0; i < 4; i++){
+    if(v <= bounds[i+1] || i === 3){
+      const span = bounds[i+1] - bounds[i];
+      const frac = span > 0 ? Math.min(1, Math.max(0, (v - bounds[i]) / span)) : 0;
+      return i * 25 + frac * 25;
+    }
+  }
+  return 100;
+}
+
 function render(){
   renderTabs();
   const day = currentDay();
@@ -322,42 +357,42 @@ function render(){
     return;
   }
 
-  const fwiVals = day.regions.map(r=>Number(r.fwi)||0);
-  const avg = fwiVals.reduce((a,b)=>a+b,0) / fwiVals.length;
+  const fwiVals = day.regions.map(r=>r.fwi).filter(v=>v!=null && Number.isFinite(Number(v))).map(Number);
+  const avg = fwiVals.length ? fwiVals.reduce((a,b)=>a+b,0) / fwiVals.length : null;
   const cls = classifyFWI(avg);
   const heroStatus = document.getElementById('heroStatus');
-  heroStatus.textContent = CLASS_LABEL[cls] + ' · FWI ' + avg.toFixed(1);
+  heroStatus.textContent = avg==null ? 'TANPA DATA' : (CLASS_LABEL[cls] + ' · FWI ' + avg.toFixed(1));
   heroStatus.style.color = CLASS_HEX[cls];
 
-  const top = [...day.regions].sort((a,b)=>(b.fwi||0)-(a.fwi||0))[0];
+  const top = [...day.regions].sort((a,b)=>(b.fwi ?? -1)-(a.fwi ?? -1))[0];
   const topEl = document.getElementById('heroTopRegion');
-  topEl.textContent = top.name + ' (FWI ' + top.fwi + ')';
+  topEl.textContent = top.name + ' (FWI ' + (top.fwi ?? '—') + ')';
   topEl.style.color = CLASS_HEX[classifyFWI(top.fwi)];
 
-  const pct = Math.min(100, (avg/20)*100);
+  const pct = gaugePct(avg ?? 0, [2, 7, 13]);
   document.getElementById('gaugeMarker').style.left = pct + '%';
-  document.getElementById('gaugeVal').textContent = avg.toFixed(1);
+  document.getElementById('gaugeVal').textContent = avg==null ? '—' : avg.toFixed(1);
 
-  const ffmcVals = day.regions.map(r=>Number(r.ffmc)||0);
-  const avgFfmc = ffmcVals.reduce((a,b)=>a+b,0) / ffmcVals.length;
+  const ffmcVals = day.regions.map(r=>r.ffmc).filter(v=>v!=null && Number.isFinite(Number(v))).map(Number);
+  const avgFfmc = ffmcVals.length ? ffmcVals.reduce((a,b)=>a+b,0) / ffmcVals.length : null;
   const clsFfmc = classifyFFMC(avgFfmc);
   const heroStatusFfmc = document.getElementById('heroStatusFfmc');
-  heroStatusFfmc.textContent = CLASS_LABEL[clsFfmc] + ' · FFMC ' + avgFfmc.toFixed(1);
+  heroStatusFfmc.textContent = avgFfmc==null ? 'TANPA DATA' : (CLASS_LABEL[clsFfmc] + ' · FFMC ' + avgFfmc.toFixed(1));
   heroStatusFfmc.style.color = CLASS_HEX[clsFfmc];
 
-  const topFfmc = [...day.regions].sort((a,b)=>(b.ffmc||0)-(a.ffmc||0))[0];
+  const topFfmc = [...day.regions].sort((a,b)=>(b.ffmc ?? -1)-(a.ffmc ?? -1))[0];
   const topFfmcEl = document.getElementById('heroTopRegionFfmc');
-  topFfmcEl.textContent = topFfmc.name + ' (FFMC ' + topFfmc.ffmc + ')';
+  topFfmcEl.textContent = topFfmc.name + ' (FFMC ' + (topFfmc.ffmc ?? '—') + ')';
   topFfmcEl.style.color = CLASS_HEX[classifyFFMC(topFfmc.ffmc)];
 
-  const pctFfmc = Math.min(100, (avgFfmc/101)*100);
+  const pctFfmc = gaugePct(avgFfmc ?? 0, [76, 83, 89]);
   document.getElementById('gaugeMarkerFfmc').style.left = pctFfmc + '%';
-  document.getElementById('gaugeValFfmc').textContent = avgFfmc.toFixed(1);
+  document.getElementById('gaugeValFfmc').textContent = avgFfmc==null ? '—' : avgFfmc.toFixed(1);
 
-  const counts = {rendah:0, sedang:0, tinggi:0, ekstrim:0};
+  const counts = {rendah:0, sedang:0, tinggi:0, ekstrim:0, nodata:0};
   day.regions.forEach(r=> counts[classifyFWI(r.fwi)]++ );
-  const summaryColor = { rendah:'border-blue-500 text-blue-400', sedang:'border-amber-500 text-amber-400', tinggi:'border-red-500 text-red-400', ekstrim:'border-purple-500 text-purple-400' };
-  document.getElementById('summaryRow').innerHTML = ['rendah','sedang','tinggi','ekstrim'].map(k=>`
+  const summaryColor = { rendah:'border-blue-500 text-blue-400', sedang:'border-amber-500 text-amber-400', tinggi:'border-red-500 text-red-400', ekstrim:'border-purple-500 text-purple-400', nodata:'border-slate-600 text-slate-500' };
+  document.getElementById('summaryRow').innerHTML = ['rendah','sedang','tinggi','ekstrim','nodata'].map(k=>`
     <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 border-t-4 ${summaryColor[k]}">
       <div class="text-2xl font-bold ${summaryColor[k].split(' ')[1]}">${counts[k]}</div>
       <div class="text-xs text-slate-400 mt-0.5">Wilayah — ${CLASS_LABEL[k]}</div>
