@@ -557,9 +557,8 @@ fetchData(true);
 </script>
 
 <!-- ============================================================= -->
-<!-- CHATBOT WIDGET -- jawab pertanyaan soal data FFMC/FWI dari      -->
-<!-- payload yang sudah dimuat di atas. Murni cek kata kunci, tidak  -->
-<!-- ada API/AI eksternal, jadi gratis & tidak butuh koneksi lain.   -->
+<!-- CHATBOT AI — ditenagai Google Gemini via Apps Script proxy      -->
+<!-- Ganti APP_SCRIPT_URL dengan URL web app yang sudah dideploy     -->
 <!-- ============================================================= -->
 <button id="chatToggleBtn"
   class="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 shadow-xl flex items-center justify-center text-2xl transition-transform hover:scale-105"
@@ -578,420 +577,214 @@ fetchData(true);
     <input id="chatInput" type="text" autocomplete="off" placeholder="mis. FWI Samarinda hari ini?"
       class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500">
     <button type="submit" class="bg-red-600 hover:bg-red-500 rounded-lg px-3 text-sm font-semibold">Kirim</button>
-  </form>
-</div>
+  <script>
+  // =============================================================
+  // 🔥 CHATBOT AI — KARHUTLA KALTIM
+  // Panggil Google Gemini via Apps Script proxy
+  // =============================================================
 
-<script>
-(function(){
-  // --- alias nama kabupaten/kota supaya bisa dikenali dari berbagai cara ketik ---
-  const KAB_ALIASES = [
-    { kab:'Kota Samarinda',           words:['samarinda'] },
-    { kab:'Kota Balikpapan',          words:['balikpapan'] },
-    { kab:'Kota Bontang',             words:['bontang'] },
-    { kab:'Kab. Kutai Kartanegara',   words:['kutai kartanegara','kukar'] },
-    { kab:'Kab. Kutai Timur',         words:['kutai timur','kutim'] },
-    { kab:'Kab. Kutai Barat',         words:['kutai barat','kubar'] },
-    { kab:'Kab. Penajam Paser Utara', words:['penajam paser utara','ppu','penajam'] },
-    { kab:'Kab. Paser',               words:['paser'] },
-    { kab:'Kab. Berau',               words:['berau'] },
-    { kab:'Kab. Mahakam Ulu',         words:['mahakam ulu','mahulu'] },
-  ];
-  const CLASS_EMOJI = { rendah:'🟢', sedang:'🟡', tinggi:'🟠', ekstrim:'🔴', nodata:'⚪' };
+  (function(){  
+    // >>> GANTI INI dengan URL web app Apps Script kamu <<<
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMjq5L9jCW0CPxvuIXid8LybpkxwF8kDVt_Wou4Zg434BxkAqb_CyQFdxoUTjNRCYt/exec';
 
-  function norm(s){ return (s||'').toLowerCase().normalize('NFKD').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim(); }
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-  function lower1(s){ return s.charAt(0).toLowerCase() + s.slice(1); }
+    // Riwayat chat dikirim ke server biar AI paham konteks
+    let chatHistory = [];
+    let greeted = false;
 
-  // Cari SEMUA kemunculan alias kabupaten di query (dipakai utk "bandingkan A dan B"),
-  // urutkan berdasar posisi kemunculan supaya urutan jawaban sesuai urutan disebut.
-  function findAllKabAliases(qNorm){
-    let hits = []; // {kab, pos, len}
-    KAB_ALIASES.forEach(entry=>{
-      entry.words.forEach(w=>{
-        const pos = qNorm.indexOf(w);
-        if(pos>-1) hits.push({kab:entry.kab, pos, len:w.length});
-      });
-    });
-    // buang duplikat kabupaten yang sama, ambil match terpanjang per kabupaten
-    const byKab = {};
-    hits.forEach(h=>{ if(!byKab[h.kab] || h.len>byKab[h.kab].len) byKab[h.kab]=h; });
-    return Object.values(byKab).sort((a,b)=>a.pos-b.pos).map(h=>h.kab);
-  }
-
-  function findKabAlias(qNorm){
-    const all = findAllKabAliases(qNorm);
-    if(all.length===0) return null;
-    // kalau banyak, pilih alias dg kata terpanjang (paling spesifik)
-    let best=null, bestLen=0;
-    KAB_ALIASES.forEach(entry=>{
-      entry.words.forEach(w=>{
-        if(qNorm.includes(w) && w.length>bestLen){ best=entry.kab; bestLen=w.length; }
-      });
-    });
-    return best;
-  }
-
-  function findKecamatan(qNorm, day){
-    let best = null, bestKab = null, bestLen = 0;
-    day.regions.forEach(r=>{
-      (r.kecamatan||[]).forEach(k=>{
-        const kn = norm(k.name);
-        if(kn.length >= 3 && qNorm.includes(kn) && kn.length > bestLen){
-          best = k; bestKab = r.name; bestLen = kn.length;
-        }
-      });
-    });
-    return best ? {kec:best, kab:bestKab} : null;
-  }
-
-  function detectDayOffset(qNorm){
-    if(qNorm.includes('lusa')) return 2;
-    if(qNorm.includes('besok')) return 1;
-    return 0; // default: hari ini
-  }
-
-  function detectMetric(qNorm){
-    const wantFfmc = qNorm.includes('ffmc');
-    const wantFwi = qNorm.includes('fwi') || qNorm.includes('fire weather');
-    if(wantFfmc && !wantFwi) return 'ffmc';
-    if(wantFwi && !wantFfmc) return 'fwi';
-    return 'both';
-  }
-
-  function fmtVal(v){ return v==null ? 'belum ada data' : v; }
-
-  // --- kalimat natural (dipilih acak dari beberapa variasi) utk 1 wilayah ---
-  function describeRegion(r, dayLabel, metric){
-    const fcls = classifyFFMC(r.ffmc), wcls = classifyFWI(r.fwi);
-    const dl = lower1(dayLabel);
-
-    if(metric==='fwi'){
-      if(r.fwi==null) return `Untuk <b>${r.name}</b> ${dl}, datanya belum tersedia 🤷`;
-      const tmpl = [
-        `${CLASS_EMOJI[wcls]} FWI <b>${r.name}</b> ${dl} ada di <b>${r.fwi}</b>, masuk kategori <b>${CLASS_LABEL[wcls]}</b>.`,
-        `${dayLabel}, Fire Weather Index untuk <b>${r.name}</b> tercatat <b>${r.fwi}</b> ${CLASS_EMOJI[wcls]} (${CLASS_LABEL[wcls]}).`,
-      ];
-      return pick(tmpl);
-    }
-    if(metric==='ffmc'){
-      if(r.ffmc==null) return `Untuk <b>${r.name}</b> ${dl}, datanya belum tersedia 🤷`;
-      const tmpl = [
-        `${CLASS_EMOJI[fcls]} FFMC <b>${r.name}</b> ${dl} ada di <b>${r.ffmc}</b>, kategori <b>${CLASS_LABEL[fcls]}</b>.`,
-        `${dayLabel}, kekeringan permukaan lahan (FFMC) di <b>${r.name}</b> tercatat <b>${r.ffmc}</b> ${CLASS_EMOJI[fcls]} (${CLASS_LABEL[fcls]}).`,
-      ];
-      return pick(tmpl);
-    }
-    if(r.ffmc==null && r.fwi==null) return `Untuk <b>${r.name}</b> ${dl}, datanya belum tersedia 🤷`;
-    const tmpl = [
-      `${CLASS_EMOJI[wcls]} <b>${r.name}</b> ${dl}: FWI <b>${fmtVal(r.fwi)}</b> (${r.fwi!=null?CLASS_LABEL[wcls]:'-'}), FFMC <b>${fmtVal(r.ffmc)}</b> (${r.ffmc!=null?CLASS_LABEL[fcls]:'-'}).`,
-      `Kondisi <b>${r.name}</b> ${dl} — FWI <b>${fmtVal(r.fwi)}</b> ${CLASS_EMOJI[wcls]} · FFMC <b>${fmtVal(r.ffmc)}</b> ${CLASS_EMOJI[fcls]}.`,
-      `${dayLabel} di <b>${r.name}</b>, status <b>${CLASS_LABEL[wcls]}</b> (FWI ${fmtVal(r.fwi)}) dengan FFMC ${fmtVal(r.ffmc)}.`,
-    ];
-    return pick(tmpl);
-  }
-
-  function describeKecamatan(k, kabName, dayLabel, metric){
-    const fcls = classifyFFMC(k.ffmc), wcls = classifyFWI(k.fwi);
-    const dl = lower1(dayLabel);
-    if(metric==='fwi'){
-      if(k.fwi==null) return `FWI untuk <b>${k.name}</b> (${kabName}) ${dl} belum ada datanya 🤷`;
-      return `${CLASS_EMOJI[wcls]} FWI <b>${k.name}</b> (${kabName}) ${dl}: <b>${k.fwi}</b> — ${CLASS_LABEL[wcls]}.`;
-    }
-    if(metric==='ffmc'){
-      if(k.ffmc==null) return `FFMC untuk <b>${k.name}</b> (${kabName}) ${dl} belum ada datanya 🤷`;
-      return `${CLASS_EMOJI[fcls]} FFMC <b>${k.name}</b> (${kabName}) ${dl}: <b>${k.ffmc}</b> — ${CLASS_LABEL[fcls]}.`;
-    }
-    if(k.ffmc==null && k.fwi==null) return `Data <b>${k.name}</b> (${kabName}) ${dl} belum tersedia 🤷`;
-    return `${CLASS_EMOJI[wcls]} <b>${k.name}</b> di ${kabName}, ${dl}: FWI <b>${fmtVal(k.fwi)}</b> (${k.fwi!=null?CLASS_LABEL[wcls]:'-'}), FFMC <b>${fmtVal(k.ffmc)}</b> (${k.ffmc!=null?CLASS_LABEL[fcls]:'-'}).`;
-  }
-
-  // --- ringkasan rata-rata provinsi (dipakai utk pertanyaan "kondisi kaltim") ---
-  function provinceSummary(day, dayLabel){
-    const fwiVals = day.regions.map(r=>r.fwi).filter(v=>v!=null);
-    const ffmcVals = day.regions.map(r=>r.ffmc).filter(v=>v!=null);
-    if(fwiVals.length===0) return `Belum ada data yang cukup untuk meringkas kondisi Kaltim ${lower1(dayLabel)}.`;
-    const avgFwi = Math.round((fwiVals.reduce((a,b)=>a+b,0)/fwiVals.length)*10)/10;
-    const avgFfmc = ffmcVals.length ? Math.round((ffmcVals.reduce((a,b)=>a+b,0)/ffmcVals.length)*10)/10 : null;
-    const wcls = classifyFWI(avgFwi);
-    const top = [...day.regions].filter(r=>r.fwi!=null).sort((a,b)=>b.fwi-a.fwi)[0];
-    let msg = `${CLASS_EMOJI[wcls]} Secara rata-rata, kondisi Kaltim ${lower1(dayLabel)} ada di level <b>${CLASS_LABEL[wcls]}</b> (FWI rata-rata ${avgFwi}${avgFfmc!=null ? ', FFMC rata-rata '+avgFfmc : ''}).`;
-    if(top) msg += ` Wilayah yang perlu diperhatikan: <b>${top.name}</b> (FWI ${top.fwi}).`;
-    return msg;
-  }
-
-  // --- tren naik/turun dibanding hari berikutnya ---
-  function trendAnswer(name, isKec, kabName, day, dayLabel){
-    const idx = payload.days.findIndex(d=>d.offset===day.offset);
-    const nextDay = payload.days[idx+1];
-    if(!nextDay) return `Tidak ada data hari berikutnya untuk dibandingkan dengan ${dayLabel}.`;
-
-    function getVal(d){
-      if(isKec){
-        const r = d.regions.find(x=>x.name===kabName);
-        const k = r ? (r.kecamatan||[]).find(x=>x.name===name) : null;
-        return k ? k.fwi : null;
-      }
-      const r = d.regions.find(x=>x.name===name);
-      return r ? r.fwi : null;
-    }
-    const cur = getVal(day), nxt = getVal(nextDay);
-    if(cur==null || nxt==null) return `Data FWI ${name} belum lengkap untuk membandingkan trennya.`;
-    const diff = Math.round((nxt-cur)*10)/10;
-    const nextLabel = lower1(DAY_NAMES[nextDay.offset] || ('H+'+nextDay.offset));
-    if(diff > 0.5) return `📈 FWI <b>${name}</b> diperkirakan <b>naik</b> dari ${cur} (${lower1(dayLabel)}) jadi ${nxt} (${nextLabel}) — kenaikan ${diff} poin. Perlu lebih waspada.`;
-    if(diff < -0.5) return `📉 FWI <b>${name}</b> diperkirakan <b>turun</b> dari ${cur} (${lower1(dayLabel)}) jadi ${nxt} (${nextLabel}) — turun ${Math.abs(diff)} poin.`;
-    return `➡️ FWI <b>${name}</b> diperkirakan relatif <b>stabil</b>, dari ${cur} (${lower1(dayLabel)}) ke ${nxt} (${nextLabel}).`;
-  }
-
-  function answerQuery(rawQuery){
-    const q = norm(rawQuery);
-    if(!q) return 'Coba ketik pertanyaan dulu ya 🙂';
-
-    if(/^(hai|halo|hi|hey|p|tolong|bantuan|help)$/.test(q) || q.length<=3){
-      return 'Halo! 👋 Saya bisa bantu jawab soal FFMC/FWI. Contoh yang bisa ditanya:<br>' +
-        '• <i>"FWI Samarinda hari ini?"</i><br>' +
-        '• <i>"Kutai Timur besok gimana?"</i><br>' +
-        '• <i>"Kecamatan mana yang paling parah?"</i><br>' +
-        '• <i>"Bandingkan Samarinda dan Balikpapan"</i><br>' +
-        '• <i>"Tren FWI Paser gimana?"</i><br>' +
-        '• <i>"Kondisi Kaltim hari ini gimana?"</i><br>' +
-        '• <i>"Saran untuk Kukar apa?"</i>';
-    }
-
-    if(!payload.days || payload.days.length===0){
-      return 'Data belum berhasil dimuat, coba klik tombol "Perbarui" di atas dulu ya.';
-    }
-
-    const offset = detectDayOffset(q);
-    const day = payload.days.find(d=>d.offset===offset) || payload.days[0];
-    const dayLabel = DAY_NAMES[day.offset] || ('H+' + day.offset);
-    const metric = detectMetric(q);
-
-    // --- ringkasan provinsi ---
-    if(/(kaltim|kalimantan timur|provinsi)/.test(q) && /(kondisi|gimana|bagaimana|ringkasan|secara umum|status)/.test(q)){
-      return provinceSummary(day, dayLabel);
-    }
-
-    // --- tren naik/turun ---
-    if(/(tren|trend|naik|turun|meningkat|menurun)/.test(q)){
-      const kecMatch = findKecamatan(q, day);
-      if(kecMatch) return trendAnswer(kecMatch.kec.name, true, kecMatch.kab, day, dayLabel);
-      const kabMatch = findKabAlias(q);
-      if(kabMatch) return trendAnswer(kabMatch, false, null, day, dayLabel);
-      return 'Tren wilayah mana yang mau dicek? Sebutkan nama kabupaten/kota atau kecamatannya ya.';
-    }
-
-    // --- saran / rekomendasi tindakan ---
-    if(/(saran|rekomendasi|harus apa|tindakan|antisipasi)/.test(q)){
-      const kecMatch = findKecamatan(q, day);
-      const kabMatch = findKabAlias(q);
-      if(kecMatch){
-        const wcls = classifyFWI(kecMatch.kec.fwi), fcls = classifyFFMC(kecMatch.kec.ffmc);
-        return panduanUmum(wcls, fcls, kecMatch.kec.name + ' (' + kecMatch.kab + ')');
-      }
-      if(kabMatch){
-        const r = day.regions.find(x=>x.name===kabMatch);
-        if(r){
-          const wcls = classifyFWI(r.fwi), fcls = classifyFFMC(r.ffmc);
-          return panduanUmum(wcls, fcls, r.name);
-        }
-      }
-      return 'Saran untuk wilayah mana? Sebutkan nama kabupaten/kota atau kecamatannya ya, misalnya "saran untuk Paser".';
-    }
-
-    // --- bandingkan 2 daerah ---
-    if(/(bandingkan|dibanding|vs|versus|dan)/.test(q)){
-      const kabs = findAllKabAliases(q);
-      if(kabs.length>=2){
-        const r1 = day.regions.find(x=>x.name===kabs[0]);
-        const r2 = day.regions.find(x=>x.name===kabs[1]);
-        if(r1 && r2){
-          let msg = `Perbandingan ${lower1(dayLabel)}:<br>` + describeRegion(r1, dayLabel, metric) + '<br>' + describeRegion(r2, dayLabel, metric);
-          if(r1.fwi!=null && r2.fwi!=null){
-            const higher = r1.fwi>=r2.fwi ? r1 : r2, lower = r1.fwi>=r2.fwi ? r2 : r1;
-            if(r1.fwi!==r2.fwi) msg += `<br><br>👉 <b>${higher.name}</b> lebih berisiko dibanding <b>${lower.name}</b> saat ini.`;
-            else msg += `<br><br>👉 Keduanya berstatus sama.`;
-          }
-          return msg;
-        }
-      }
-      // kalau cuma ketemu 1 nama daerah dg kata 'dan'/'vs' dsb, lanjut ke pencocokan normal di bawah (jangan return dulu)
-    }
-
-    // --- pertanyaan "paling parah / tertinggi / terparah" ---
-    if(/(paling parah|terparah|tertinggi|paling tinggi|paling bahaya|paling berisiko)/.test(q)){
-      const kecMode = q.includes('kecamatan');
-      if(kecMode){
-        let worst = null, worstKab = null;
-        day.regions.forEach(r=>{
-          (r.kecamatan||[]).forEach(k=>{
-            if(k.fwi!=null && (worst===null || k.fwi > worst.fwi)){ worst = k; worstKab = r.name; }
-          });
-        });
-        if(!worst) return `Belum ada data kecamatan dengan FWI untuk ${lower1(dayLabel)}.`;
-        return `Kecamatan paling parah ${lower1(dayLabel)} adalah ` + describeKecamatan(worst, worstKab, dayLabel, metric);
-      }
-      const sorted = [...day.regions].filter(r=>r.fwi!=null).sort((a,b)=>b.fwi-a.fwi);
-      if(sorted.length===0) return `Belum ada data FWI untuk ${lower1(dayLabel)}.`;
-      return `Yang paling parah ${lower1(dayLabel)} adalah ` + describeRegion(sorted[0], dayLabel, metric);
-    }
-
-    // --- pertanyaan "paling rendah / aman" ---
-    if(/(paling rendah|paling aman|teraman|paling bagus|paling minim)/.test(q)){
-      const sorted = [...day.regions].filter(r=>r.fwi!=null).sort((a,b)=>a.fwi-b.fwi);
-      if(sorted.length===0) return `Belum ada data FWI untuk ${lower1(dayLabel)}.`;
-      return `Yang paling aman ${lower1(dayLabel)} adalah ` + describeRegion(sorted[0], dayLabel, metric);
-    }
-
-    // --- hitung jumlah wilayah per status ("berapa daerah status tinggi") ---
-    const statusWord = ['ekstrim','tinggi','sedang','rendah'].find(s=>q.includes(s));
-    if(statusWord && /(berapa|jumlah|ada berapa)/.test(q)){
-      const count = day.regions.filter(r=>classifyFWI(r.fwi)===statusWord).length;
-      const names = day.regions.filter(r=>classifyFWI(r.fwi)===statusWord).map(r=>r.name);
-      let msg = `${CLASS_EMOJI[statusWord]} Ada <b>${count}</b> kabupaten/kota berstatus <b>${CLASS_LABEL[statusWord]}</b> ${lower1(dayLabel)}`;
-      if(count>0) msg += `: ${names.join(', ')}.`; else msg += '.';
-      return msg;
-    }
-
-    // === MULAI COCOKKAN ===
-
-    // 1) DETEKSI PERMINTAAN LIHAT KECAMATAN (follow-up atau langsung)
-    const inginKecamatan = /(kecamatan|kecamatan.?nya|rincian detail|breakdown|list|daftar|semua)/.test(q);
-
-    if(inginKecamatan){
-      // Coba pakai nama kabupaten yg disebut di query
-      let kabTarget = findKabAlias(q);
-      // Kalau gak disebut, pakai lastRegion (konteks percakapan)
-      if(!kabTarget && lastRegion) kabTarget = lastRegion;
-      if(kabTarget){
-        const r = day.regions.find(x=>x.name===kabTarget);
-        if(r){
-          const result = showKecamatanSummary(kabTarget, day, dayLabel);
-          if(result) return result;
-        }
-      }
-      // Gagal juga — arahkan user
-      let hint = lastRegion
-        ? `seperti rincian kecamatan untuk <b>${lastRegion}</b>`
-        : 'nama kabupaten/kota (Samarinda, Balikpapan, Kukar, Kutim, Kubar, Paser, PPU, Berau, Mahulu, Bontang)';
-      return `Kamu mau lihat rincian kecamatan di ${hint}? Coba ketik misalnya "kecamatan Samarinda besok" atau "detail Kukar hari ini".`;
-    }
-
-    // 2) FOLLOW-UP LEWAT KONTEKS — query pendek tanpa nama daerah, tapi ada lastRegion
-    const tidakAdaNamaDaerah = !findKabAlias(q) && !findKecamatan(q, day);
-    if(tidakAdaNamaDaerah && lastRegion){
-      // "gimana?", "besok?", "kalo hari ini?", "ffmc-nya?", "fwi-nya?"
-      if(/(gimana|bagaimana|kondisi|status|ffmc|fwi)/.test(q) || /^(hari ini|besok|lusa|\?)?$/.test(q.trim()) || q.length < 8){
-        const r = day.regions.find(x=>x.name===lastRegion);
-        if(r) return describeRegion(r, dayLabel, metric);
-      }
-    }
-
-    // 3) COCOKKAN KECAMATAN
-    const kecMatch = findKecamatan(q, day);
-    if(kecMatch){
-      saveContextFromQuery(q, day); // simpan konteks juga
-      return describeKecamatan(kecMatch.kec, kecMatch.kab, dayLabel, metric);
-    }
-
-    // 4) COCOKKAN KABUPATEN — simpan konteks
-    const kabMatch = findKabAlias(q);
-    if(kabMatch){
-      saveContextFromQuery(q, day);
-      const r = day.regions.find(x=>x.name===kabMatch);
-      if(r) return describeRegion(r, dayLabel, metric);
-    }
-
-    // 5) FALLBACK — kalau masih ada lastRegion, kasih petunjuk lebih ramah
-    if(lastRegion){
-      return `Mau tanya soal <b>${lastRegion}</b> lagi? Coba ketik "FWI ${lastRegion}" atau "kecamatan ${lastRegion}" ya. Atau sebut kabupaten/kota lain yang mau dicek.`;
-    }
-
-    const fallback = [
-      'Hmm, belum kenal nama daerah itu 🤔 Coba sebutkan nama kabupaten/kota (Samarinda, Balikpapan, Bontang, Kukar, Kutai Timur, Kutai Barat, Paser, PPU, Berau, Mahakam Ulu) atau nama kecamatannya ya.',
-      'Wilayahnya belum saya kenali 🙏 Coba ketik nama kabupaten/kota atau kecamatan yang lebih spesifik, misalnya "FWI Bontang besok" atau "kondisi Kukar hari ini".',
-    ];
-    return pick(fallback);
-  }
-
-  function appendMsg(html, who){
+    const toggleBtn = document.getElementById('chatToggleBtn');
+    const panel = document.getElementById('chatPanel');
+    const closeBtn = document.getElementById('chatCloseBtn');
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('chatInput');
     const log = document.getElementById('chatLog');
-    const bubble = document.createElement('div');
-    bubble.className = who==='user'
-      ? 'ml-auto max-w-[85%] bg-red-600 text-white rounded-xl rounded-br-sm px-3 py-2'
-      : 'mr-auto max-w-[85%] bg-slate-700 text-slate-100 rounded-xl rounded-bl-sm px-3 py-2';
-    bubble.innerHTML = html;
-    log.appendChild(bubble);
-    log.scrollTop = log.scrollHeight;
-  }
 
-  const toggleBtn = document.getElementById('chatToggleBtn');
-  const panel = document.getElementById('chatPanel');
-  const closeBtn = document.getElementById('chatCloseBtn');
-  const form = document.getElementById('chatForm');
-  const input = document.getElementById('chatInput');
-
-  // --- KONTEKS PERCAKAPAN (agar follow-up seperti "kalo di kecamatannya?" bisa dipahami) ---
-  let lastRegion = null;
-  let lastDayOffset = 0;
-
-  function saveContextFromQuery(qNorm, day){
-    KAB_ALIASES.forEach(entry=>{
-      entry.words.forEach(w=>{
-        if(qNorm.includes(w)){ lastRegion = entry.kab; }
-      });
-    });
-  }
-
-  /** Tampilkan semua kecamatan untuk suatu kabupaten */
-  function showKecamatanSummary(regionName, day, dayLabel){
-    const r = day.regions.find(x=>x.name===regionName);
-    if(!r) return null;
-    const kecs = r.kecamatan;
-    if(!kecs || kecs.length===0) return `Rincian kecamatan untuk <b>${regionName}</b> ${dayLabel} belum tersedia 🤷`;
-    const sorted = [...kecs].sort((a,b)=>(b.fwi??0)-(a.fwi??0));
-    let totalFwi=0, cntFwi=0, totalFfmc=0, cntFfmc=0;
-    sorted.forEach(k=>{ if(k.fwi!=null){ totalFwi+=k.fwi; cntFwi++; } if(k.ffmc!=null){ totalFfmc+=k.ffmc; cntFfmc++; } });
-    const avgFwi = cntFwi ? (totalFwi/cntFwi).toFixed(1) : '—';
-    const avgFfmc = cntFfmc ? (totalFfmc/cntFfmc).toFixed(1) : '—';
-    const worst = sorted[0];
-    const wcWorst = classifyFWI(worst.fwi);
-    let html = `<b>🏙️ ${regionName}</b> — ${kecs.length} kecamatan${dayLabel!=='hari ini' ? ' ('+dayLabel+')' : ''}`;
-    html += `<br>Rata-rata: FWI <b>${avgFwi}</b> · FFMC <b>${avgFfmc}</b>`;
-    html += `<br>Terparah: <b>${worst.name}</b> (FWI ${worst.fwi} ${CLASS_EMOJI[wcWorst]})<br><br>`;
-    html += sorted.slice(0, 15).map(k=>{
-      const wc = classifyFWI(k.fwi), fc = classifyFFMC(k.ffmc);
-      return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${CLASS_HEX[wc]};margin-right:4px;"></span> <b>${k.name}</b> — FWI ${k.fwi??'—'} ${CLASS_EMOJI[wc]} · FFMC ${k.ffmc??'—'}`;
-    }).join('<br>');
-    if(kecs.length>15) html += `<br><span class="text-slate-500">… dan ${kecs.length-15} kecamatan lainnya</span>`;
-    return html;
-  }
-
-  let greeted = false;
-  toggleBtn.addEventListener('click', ()=>{
-    const hidden = panel.classList.contains('hidden');
-    panel.classList.toggle('hidden');
-    panel.classList.toggle('flex', hidden);
-    if(hidden && !greeted){
-      appendMsg(answerQuery('halo'), 'bot');
-      greeted = true;
+    // Indikator loading
+    function showTyping(){
+      const dot = document.createElement('div');
+      dot.id = 'typingIndicator';
+      dot.className = 'mr-auto max-w-[85%] bg-slate-700 text-slate-100 rounded-xl rounded-bl-sm px-3 py-2 text-xs italic';
+      dot.textContent = '⏳ mikir...';
+      log.appendChild(dot);
+      log.scrollTop = log.scrollHeight;
     }
-    if(hidden) input.focus();
-  });
-  closeBtn.addEventListener('click', ()=>{
-    panel.classList.add('hidden');
-    panel.classList.remove('flex');
-  });
+    function hideTyping(){
+      const el = document.getElementById('typingIndicator');
+      if(el) el.remove();
+    }
 
-  form.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const q = input.value.trim();
-    if(!q) return;
-    appendMsg(q.replace(/</g,'&lt;'), 'user');
-    input.value = '';
-    setTimeout(()=> appendMsg(answerQuery(q), 'bot'), 150);
-  });
-})();
-</script>
+    function appendMsg(html, who){
+      const bubble = document.createElement('div');
+      bubble.className = who==='user'
+        ? 'ml-auto max-w-[85%] bg-red-600 text-white rounded-xl rounded-br-sm px-3 py-2'
+        : 'mr-auto max-w-[85%] bg-slate-700 text-slate-100 rounded-xl rounded-bl-sm px-3 py-2';
+      bubble.innerHTML = html;
+      log.appendChild(bubble);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function askAI(query){
+      showTyping();
+      try {
+        // Tanggal hari ini untuk konteks
+        const today = new Date().toISOString().slice(0,10);
+
+        const res = await fetch(APP_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',       // Apps Script web app butuh no-cors
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: query,
+            history: chatHistory.slice(-10),  // kirim 10 chat terakhir
+            tanggal: today
+          })
+        });
+
+        // Karena no-cors, response-nya opaque — kita gak bisa baca body langsung.
+        // Alternatif: Apps Script balikin response via redirect (GET) atau
+        // kita fallback ke rule-based lokal jika gagal.
+
+        // Coba parse — mungkin berhasil kalau cors setup-nya proper
+        try {
+          const data = await res.json();
+          if(data.success && data.response) return data.response;
+          if(data.error) throw new Error(data.error);
+        } catch(e1){
+          // Fallback: coba pakai rule-based sederhana
+          return await fallbackAI(query);
+        }
+
+      } catch(e) {
+        hideTyping();
+        return '⚠️ Gagal terhubung ke AI, coba beberapa saat lagi. Error: ' + e.message;
+      }
+      hideTyping();
+    }
+
+    // =====================================================
+    // FALLBACK: kalau no-cors gagal, AI dijalankan LOKAL
+    // via rule-based (jika tidak ada koneksi ke AI)
+    // =====================================================
+    async function fallbackAI(queryRaw){
+      const q = queryRaw.toLowerCase().normalize('NFKD').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
+      const day = payload?.days?.[0];
+
+      // Cari kabupaten dari query atau dari history terakhir
+      let kabName = null;
+      const kabWords = [
+        { name:'Kota Samarinda', words:['samarinda'] },
+        { name:'Kota Balikpapan', words:['balikpapan'] },
+        { name:'Kota Bontang', words:['bontang'] },
+        { name:'Kab. Kutai Kartanegara', words:['kukar','kutai kartanegara'] },
+        { name:'Kab. Kutai Timur', words:['kutim','kutai timur'] },
+        { name:'Kab. Kutai Barat', words:['kubar','kutai barat'] },
+        { name:'Kab. Penajam Paser Utara', words:['ppu','penajam'] },
+        { name:'Kab. Paser', words:['paser'] },
+        { name:'Kab. Berau', words:['berau'] },
+        { name:'Kab. Mahakam Ulu', words:['mahulu','mahakam ulu'] },
+      ];
+      for(const entry of kabWords){
+        for(const w of entry.words){
+          if(q.includes(w)){ kabName = entry.name; break; }
+        }
+        if(kabName) break;
+      }
+      if(!kabName){
+        // cek history
+        for(let i=chatHistory.length-1; i>=0; i--){
+          if(chatHistory[i].role === 'assistant'){
+            for(const entry of kabWords){
+              for(const w of entry.words){
+                if(chatHistory[i].text.toLowerCase().includes(w)){ kabName = entry.name; break; }
+              }
+              if(kabName) break;
+            }
+            if(kabName) break;
+          }
+        }
+      }
+
+      if(!day || !day.regions) return '😅 Data belum dimuat. Coba klik "Perbarui" dulu ya.';
+      if(!kabName) return 'Tanya nama kabupaten/kota dulu ya, misal "FWI Samarinda hari ini?"';
+
+      const r = day.regions.find(x=>x.name===kabName);
+      if(!r) return 'Data untuk ' + kabName + ' belum tersedia.';
+
+      const clsFWI = r.fwi >= 13 ? '🔴 EKSTRIM' : r.fwi >= 7 ? '🟠 TINGGI' : r.fwi >= 2 ? '🟡 SEDANG' : '🟢 RENDAH';
+      const clsFFMC = r.ffmc >= 89 ? '🔴 EKSTRIM' : r.ffmc >= 83 ? '🟠 TINGGI' : r.ffmc >= 76 ? '🟡 SEDANG' : '🟢 RENDAH';
+      const detik = new Date().getSeconds();
+      let reply;
+
+      if(q.includes('kecamatan') || q.includes('rincian') || q.includes('detail') || q.includes('semua')){
+        const kecs = r.kecamatan;
+        if(!kecs || kecs.length===0) return 'Rincian kecamatan untuk ' + kabName + ' belum tersedia.';
+        const sorted = [...kecs].sort((a,b)=> (b.fwi??0)-(a.fwi??0));
+        let list = sorted.slice(0,10).map(k=>{
+          const wc = k.fwi >= 13 ? '🔴' : k.fwi >= 7 ? '🟠' : k.fwi >= 2 ? '🟡' : '🟢';
+          return wc + ' ' + k.name + ' — FWI ' + (k.fwi??'—');
+        }).join('\n');
+        reply = '🏙️ **' + kabName + '** — ' + kecs.length + ' kecamatan\n';
+        reply += 'Rata-rata FWI ' + kecs.reduce((s,k)=> s+(k.fwi||0),0)/kecs.length + '\n';
+        reply += list;
+        if(kecs.length>10) reply += '\n…dan ' + (kecs.length-10) + ' lainnya';
+      }
+      else if(q.includes('tren') || q.includes('naik') || q.includes('turun')){
+        const nextDay = payload.days[1];
+        if(!nextDay) return 'Data besok belum tersedia untuk perbandingan tren.';
+        const nxt = nextDay.regions.find(x=>x.name===kabName);
+        if(!nxt) return 'Data besok untuk ' + kabName + ' belum tersedia.';
+        const diff = (nxt.fwi - r.fwi).toFixed(1);
+        if(diff > 0.5) reply = '📈 FWI ' + kabName + ' diprediksi **naik** ' + diff + ' poin besok. Waspada!';
+        else if(diff < -0.5) reply = '📉 FWI ' + kabName + ' diprediksi **turun** ' + Math.abs(diff) + ' poin besok.';
+        else reply = '➡️ FWI ' + kabName + ' relatif **stabil**.';
+        reply += ' (hari ini: ' + r.fwi + ', besok: ' + nxt.fwi + ')';
+      }
+      else if(q.includes('banding') || q.includes('vs') || q.includes('dan')){
+        reply = '📊 **' + kabName + '** hari ini:\nFWI ' + r.fwi + ' ' + clsFWI + '\nFFMC ' + r.ffmc + ' ' + clsFFMC;
+      }
+      else {
+        reply = '🔥 **' + kabName + '** hari ini:\nFWI **' + r.fwi + '** ' + clsFWI + '\nFFMC **' + r.ffmc + '** ' + clsFFMC;
+        if(r.fwi >= 7) reply += '\n⚠️ Level siaga: waspada potensi kebakaran.';
+        else reply += '\n✅ Kondisi relatif aman.';
+      }
+
+      // Simulasi delay biar natural
+      await new Promise(r=> setTimeout(r, 300 + Math.random()*400));
+      return reply.replace(/\n/g, '<br>');
+    }
+
+    async function handleSubmit(e){
+      e.preventDefault();
+      const q = input.value.trim();
+      if(!q) return;
+
+      appendMsg(q.replace(/</g,'&lt;'), 'user');
+      chatHistory.push({ role: 'user', text: q });
+      input.value = '';
+
+      const reply = await askAI(q);
+      hideTyping();
+      chatHistory.push({ role: 'assistant', text: reply.replace(/<br>/g,'\n') });
+      appendMsg(reply, 'bot');
+    }
+
+    toggleBtn.addEventListener('click', ()=>{
+      const hidden = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden');
+      panel.classList.toggle('flex', hidden);
+      if(hidden && !greeted){
+        appendMsg('👋 Halo! Saya asisten AI Karhutla Kaltim. Tanya apa pun soal FWI/FFMC, misal:<br>• <b>FWI Samarinda hari ini?</b><br>• <b>Kecamatan di Kukar gimana?</b><br>• <b>Tren Paser naik atau turun?</b><br>• <b>Saran untuk Kutim?</b>', 'bot');
+        greeted = true;
+      }
+      if(hidden) input.focus();
+    });
+
+    closeBtn.addEventListener('click', ()=>{
+      panel.classList.add('hidden');
+      panel.classList.remove('flex');
+    });
+
+    form.addEventListener('submit', handleSubmit);
+  })();
+  </script>
 </body>
 </html>
