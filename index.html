@@ -557,8 +557,7 @@ fetchData(true);
 </script>
 
 <!-- ============================================================= -->
-<!-- CHATBOT AI — ditenagai Google Gemini via Apps Script proxy      -->
-<!-- Ganti APP_SCRIPT_URL dengan URL web app yang sudah dideploy     -->
+<!-- CHATBOT — Karhutla Kaltim (rule-based lokal, tanpa AI)          -->
 <!-- ============================================================= -->
 <button id="chatToggleBtn"
   class="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 shadow-xl flex items-center justify-center text-2xl transition-transform hover:scale-105"
@@ -579,17 +578,16 @@ fetchData(true);
     <button type="submit" class="bg-red-600 hover:bg-red-500 rounded-lg px-3 text-sm font-semibold">Kirim</button>
   <script>
   // =============================================================
-  // 🔥 CHATBOT AI — KARHUTLA KALTIM
-  // Panggil Google Gemini via Apps Script proxy
+  // 🔥 CHATBOT — KARHUTLA KALTIM (rule-based lokal)
+  // Paham: per kabupaten & kecamatan, tren, perbandingan,
+  //        ringkasan, saran, follow-up tanpa ulang nama
   // =============================================================
 
-  (function(){  
-    // >>> GANTI INI dengan URL web app Apps Script kamu <<<
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMjq5L9jCW0CPxvuIXid8LybpkxwF8kDVt_Wou4Zg434BxkAqb_CyQFdxoUTjNRCYt/exec';
-
-    // Riwayat chat dikirim ke server biar AI paham konteks
+  (function(){
     let chatHistory = [];
     let greeted = false;
+    let lastRegion = null;
+    let lastDay = 0;
 
     const toggleBtn = document.getElementById('chatToggleBtn');
     const panel = document.getElementById('chatPanel');
@@ -598,192 +596,180 @@ fetchData(true);
     const input = document.getElementById('chatInput');
     const log = document.getElementById('chatLog');
 
-    // Indikator loading
-    function showTyping(){
-      const dot = document.createElement('div');
-      dot.id = 'typingIndicator';
-      dot.className = 'mr-auto max-w-[85%] bg-slate-700 text-slate-100 rounded-xl rounded-bl-sm px-3 py-2 text-xs italic';
-      dot.textContent = '⏳ mikir...';
-      log.appendChild(dot);
-      log.scrollTop = log.scrollHeight;
-    }
-    function hideTyping(){
-      const el = document.getElementById('typingIndicator');
-      if(el) el.remove();
-    }
+    const KAB_LIST = [
+      { name:'Kota Samarinda', aliases:['samarinda','sda'] },
+      { name:'Kota Balikpapan', aliases:['balikpapan','bpn'] },
+      { name:'Kota Bontang', aliases:['bontang'] },
+      { name:'Kab. Kutai Kartanegara', aliases:['kukar','kutai kartanegara','kartanegara'] },
+      { name:'Kab. Kutai Timur', aliases:['kutim','kutai timur'] },
+      { name:'Kab. Kutai Barat', aliases:['kubar','kutai barat'] },
+      { name:'Kab. Penajam Paser Utara', aliases:['ppu','penajam','penajam paser'] },
+      { name:'Kab. Paser', aliases:['paser'] },
+      { name:'Kab. Berau', aliases:['berau'] },
+      { name:'Kab. Mahakam Ulu', aliases:['mahulu','mahakam ulu'] },
+    ];
+    const DAY_LABEL = ['hari ini','besok','lusa'];
+    const FWI_T = [2,7,13];
+    const FFMC_T = [76,83,89];
 
-    function appendMsg(html, who){
-      const bubble = document.createElement('div');
-      bubble.className = who==='user'
-        ? 'ml-auto max-w-[85%] bg-red-600 text-white rounded-xl rounded-br-sm px-3 py-2'
-        : 'mr-auto max-w-[85%] bg-slate-700 text-slate-100 rounded-xl rounded-bl-sm px-3 py-2';
-      bubble.innerHTML = html;
-      log.appendChild(bubble);
-      log.scrollTop = log.scrollHeight;
-    }
+    function st(){ const d=document.createElement('div'); d.id='ti'; d.className='mr-auto max-w-[85%] bg-slate-700 text-slate-100 rounded-xl rounded-bl-sm px-3 py-2 text-xs italic'; d.textContent='\u23f3 mikir...'; log.appendChild(d); log.scrollTop=log.scrollHeight; }
+    function ht(){ const e=document.getElementById('ti'); if(e) e.remove(); }
+    function am(h,w){ const b=document.createElement('div'); b.className=w==='user'?'ml-auto max-w-[85%] bg-red-600 text-white rounded-xl rounded-br-sm px-3 py-2':'mr-auto max-w-[85%] bg-slate-700 text-slate-100 rounded-xl rounded-bl-sm px-3 py-2'; b.innerHTML=h; log.appendChild(b); log.scrollTop=log.scrollHeight; }
+    function cls(v,t){ return v>=t[2]?'\ud83d\udd34 EKSTRIM':v>=t[1]?'\ud83d\udfe0 TINGGI':v>=t[0]?'\ud83d\udfe1 SEDANG':'\ud83d\udfe2 RENDAH'; }
+    function em(v,t){ return v>=t[2]?'\ud83d\udd34':v>=t[1]?'\ud83d\udfe0':v>=t[0]?'\ud83d\udfe1':'\ud83d\udfe2'; }
+    function gd(o){ if(!payload||!payload.days) return null; return payload.days.find(d=>d.offset===o)||payload.days[o]||null; }
+    function fr(n,d){ if(!d||!d.regions) return null; return d.regions.find(r=>r.name===n)||null; }
+    function dk(q){ for(const kb of KAB_LIST) for(const a of kb.aliases) if(q.includes(a)) return kb.name; return null; }
+    function dd(q){ if(q.includes('lusa')||q.includes('3 hari')) return 2; if(q.includes('besok')||q.includes('esok')||q.includes('1 hari')) return 1; return 0; }
 
-    async function askAI(query){
-      showTyping();
-      try {
-        // Tanggal hari ini untuk konteks
-        const today = new Date().toISOString().slice(0,10);
+    async function hq(q){
+      q = q.toLowerCase().normalize('NFKD').replace(/[^\\w\\s]/g,' ').replace(/\\s+/g,' ').trim();
+      let o = dd(q), kn = dk(q);
+      if(!kn && lastRegion){ kn=lastRegion; o=lastDay; }
+      const d = gd(o);
+      if(!d) return '\ud83d\ude05 Data '+DAY_LABEL[o]+' belum dimuat. Klik "Perbarui" dulu.';
 
-        const res = await fetch(APP_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',       // Apps Script web app butuh no-cors
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: query,
-            history: chatHistory.slice(-10),  // kirim 10 chat terakhir
-            tanggal: today
-          })
-        });
-
-        // Karena no-cors, response-nya opaque — kita gak bisa baca body langsung.
-        // Alternatif: Apps Script balikin response via redirect (GET) atau
-        // kita fallback ke rule-based lokal jika gagal.
-
-        // Coba parse — mungkin berhasil kalau cors setup-nya proper
-        try {
-          const data = await res.json();
-          if(data.success && data.response) return data.response;
-          if(data.error) throw new Error(data.error);
-        } catch(e1){
-          // Fallback: coba pakai rule-based sederhana
-          return await fallbackAI(query);
-        }
-
-      } catch(e) {
-        hideTyping();
-        return '⚠️ Gagal terhubung ke AI, coba beberapa saat lagi. Error: ' + e.message;
-      }
-      hideTyping();
+      if(q.includes('ringkasan')||q.includes('ringkas')||q.includes('summary')||(q.includes('api')&&q.includes('hari'))||(q.includes('gimana')&&!kn)||q.includes('situasi')||q.includes('keadaan')||q.includes('update')||q==='halo'||q==='hai'||q==='pagi'||q==='siang'||q==='sore') return await sa(d,o);
+      if(q.includes('siapa')&&q.includes('kamu')) return '\ud83d\udd25 <b>Sistem Siaga Karhutla Kaltim</b><br>Saya asisten FWI/FFMC BMKG.<br>Coba: <b>Ringkasan api</b>, <b>FWI Samarinda?</b>, <b>Kecamatan Kukar</b>, <b>Terparah</b>, <b>Saran Kutim</b>';
+      if(q.includes('bantuan')||q.includes('tolong')||q.includes('help')||(q.includes('?')&&!kn)) return '\u2753 Tanya:<br>\u2022 <b>Ringkasan api hari ini</b><br>\u2022 <b>FWI Samarinda besok?</b><br>\u2022 <b>Kecamatan di Kukar</b><br>\u2022 <b>Wilayah terparah</b><br>\u2022 <b>Tren Balikpapan</b><br>\u2022 <b>Banding Paser vs Berau</b><br>\u2022 <b>Saran untuk Kutim</b>';
+      if(q.includes('terparah')||q.includes('tertinggi')||q.includes('terbesar')||q.includes('paling')||q.includes('top')||q.includes('ranking')||q.includes('rawan')||q.includes('kritis')) return await tr(d,o,q);
+      if(q.includes('banding')||q.includes('vs')||q.includes('perbanding')||q.includes('lebih')) return await cr(q,d,o);
+      if(q.includes('tren')||q.includes('naik')||q.includes('turun')||q.includes('meningkat')||q.includes('menurun')||q.includes('prediksi')) return await tmr(kn,d,o,q);
+      if(q.includes('saran')||q.includes('rekomendasi')||q.includes('tindakan')||q.includes('harus')||q.includes('apa yang')||q.includes('antisipasi')) return await sr(kn,d,o,q);
+      if(q.includes('kecamatan')||q.includes('rincian')||q.includes('detail')||q.includes('semua')||q.includes('kelurahan')) return await dkec(kn,d,o,q);
+      if(kn) return await dw(kn,d,o,q);
+      if(q.includes('fwi')||q.includes('ffmc')||q.includes('api')||q.includes('kebakaran')||q.includes('karhutla')) return 'Nama kabupaten/kota belum jelas. Coba <b>"FWI Samarinda"</b> atau <b>"Kecamatan di Kukar"</b>';
+      return 'Hmm kurang paham. Coba <b>"Ringkasan api hari ini"</b>, <b>"FWI Balikpapan"</b>, atau <b>"Kecamatan Paser"</b>.';
     }
 
-    // =====================================================
-    // FALLBACK: kalau no-cors gagal, AI dijalankan LOKAL
-    // via rule-based (jika tidak ada koneksi ke AI)
-    // =====================================================
-    async function fallbackAI(queryRaw){
-      const q = queryRaw.toLowerCase().normalize('NFKD').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
-      const day = payload?.days?.[0];
+    async function sa(d,o){
+      const reg=d.regions; if(!reg||!reg.length) return '\ud83d\ude05 Data kosong.';
+      const w=reg.filter(r=>r.fwi!=null);
+      if(!w.length) return '\ud83d\ude05 Data FWI kosong.';
+      const avg=w.reduce((s,r)=>s+r.fwi,0)/w.length, top=[...w].sort((a,b)=>b.fwi-a.fwi)[0];
+      const ek=w.filter(r=>r.fwi>=13).length, ti=w.filter(r=>r.fwi>=7&&r.fwi<13).length;
+      let a='\ud83d\udd25 <b>RINGKASAN '+DAY_LABEL[o].toUpperCase()+'</b>\\n\ud83d\udcc5 '+(d.date||'')+' | Rata FWI: <b>'+avg.toFixed(1)+'</b>\\n\ud83d\udd34'+ek+' \ud83d\udfe0'+ti+' \ud83d\udfe1'+(w.length-ek-ti)+' \ud83d\udfe2'+w.filter(r=>r.fwi<2).length;
+      if(top) a+='\\n\ud83c\udfc6 Tertinggi: <b>'+top.name+'</b> (FWI '+top.fwi+')';
+      const tmr=gd(o+1);
+      if(tmr&&tmr.regions){ const tf=tmr.regions.filter(r=>r.fwi!=null); if(tf.length){ const ta=tf.reduce((s,r)=>s+r.fwi,0)/tf.length, df=(ta-avg).toFixed(1); if(df>0.5) a+='\\n\\n\ud83d\udcc8 <b>Besok</b> naik '+df+' poin'; else if(df<-0.5) a+='\\n\\n\ud83d\udcc9 <b>Besok</b> turun '+Math.abs(df)+' poin'; else a+='\\n\\n\u27a1\ufe0f <b>Besok</b> stabil'; }}
+      return a.replace(/\\\\n/g,'<br>');
+    }
 
-      // Cari kabupaten dari query atau dari history terakhir
-      let kabName = null;
-      const kabWords = [
-        { name:'Kota Samarinda', words:['samarinda'] },
-        { name:'Kota Balikpapan', words:['balikpapan'] },
-        { name:'Kota Bontang', words:['bontang'] },
-        { name:'Kab. Kutai Kartanegara', words:['kukar','kutai kartanegara'] },
-        { name:'Kab. Kutai Timur', words:['kutim','kutai timur'] },
-        { name:'Kab. Kutai Barat', words:['kubar','kutai barat'] },
-        { name:'Kab. Penajam Paser Utara', words:['ppu','penajam'] },
-        { name:'Kab. Paser', words:['paser'] },
-        { name:'Kab. Berau', words:['berau'] },
-        { name:'Kab. Mahakam Ulu', words:['mahulu','mahakam ulu'] },
-      ];
-      for(const entry of kabWords){
-        for(const w of entry.words){
-          if(q.includes(w)){ kabName = entry.name; break; }
-        }
-        if(kabName) break;
-      }
-      if(!kabName){
-        // cek history
-        for(let i=chatHistory.length-1; i>=0; i--){
-          if(chatHistory[i].role === 'assistant'){
-            for(const entry of kabWords){
-              for(const w of entry.words){
-                if(chatHistory[i].text.toLowerCase().includes(w)){ kabName = entry.name; break; }
-              }
-              if(kabName) break;
-            }
-            if(kabName) break;
-          }
-        }
-      }
+    async function tr(d,o,q){
+      const reg=[...d.regions.filter(r=>r.fwi!=null)].sort((a,b)=>b.fwi-a.fwi);
+      if(!reg.length) return '\ud83d\ude05 Data FWI tidak tersedia.';
+      const l=q.includes('5')||q.includes('lima')?5:q.includes('semua')||q.includes('all')?reg.length:3;
+      let a='\ud83c\udfc6 <b>FWI Tertinggi \u2014 '+DAY_LABEL[o]+'</b>\\n';
+      reg.slice(0,l).forEach((r,i)=>{ a+=(i+1)+'. '+r.name+' \u2014 FWI <b>'+r.fwi+'</b> '+cls(r.fwi,FWI_T)+'\\n'; });
+      const fm=[...d.regions.filter(r=>r.ffmc!=null)].sort((a,b)=>b.ffmc-a.ffmc);
+      if(fm.length){ a+='\\n\ud83d\udca7 <b>FFMC Tertinggi:</b>\\n'; fm.slice(0,3).forEach((r,i)=>{ a+=(i+1)+'. '+r.name+' \u2014 FFMC <b>'+r.ffmc+'</b> '+cls(r.ffmc,FFMC_T)+'\\n'; }); }
+      return a.replace(/\\\\n/g,'<br>');
+    }
 
-      if(!day || !day.regions) return '😅 Data belum dimuat. Coba klik "Perbarui" dulu ya.';
-      if(!kabName) return 'Tanya nama kabupaten/kota dulu ya, misal "FWI Samarinda hari ini?"';
+    async function cr(q,d,o){
+      let f=[];
+      for(const kb of KAB_LIST) for(const a of kb.aliases) if(q.includes(a)&&!f.includes(kb.name)&&f.length<2){ f.push(kb.name); break; }
+      if(f.length<2) return 'Sebutkan 2 wilayah, misal <b>"Bandingkan Paser vs Berau"</b>';
+      const r1=fr(f[0],d), r2=fr(f[1],d);
+      if(!r1||!r2) return 'Data salah satu wilayah tidak tersedia.';
+      let a='\ud83d\udcca <b>Perbandingan \u2014 '+DAY_LABEL[o]+'</b>\\n<pre>';
+      a+=(f[0]+':').padEnd(20)+' | '+f[1]+'\\n'+'\u2014'.repeat(35)+'\\n';
+      a+='FWI:  '+(r1.fwi||'')+' '+em(r1.fwi,FWI_T)+'    | '+(r2.fwi||'')+' '+em(r2.fwi,FWI_T)+'\\n';
+      a+='FFMC: '+(r1.ffmc||'')+'    | '+(r2.ffmc||'')+'\\n</pre>';
+      const df=Math.abs((r1.fwi||0)-(r2.fwi||0));
+      if(df>5) a+='\ud83c\udfc6 '+(r1.fwi>r2.fwi?f[0]:f[1])+' jauh lebih berisiko.';
+      else if(df>1) a+='\u2696\ufe0f '+(r1.fwi>r2.fwi?f[0]:f[1])+' sedikit lebih tinggi.';
+      else a+='\u27a1\ufe0f Keduanya setara.';
+      return a.replace(/\\\\n/g,'<br>');
+    }
 
-      const r = day.regions.find(x=>x.name===kabName);
-      if(!r) return 'Data untuk ' + kabName + ' belum tersedia.';
+    async function tmr(kn,d,o,q){
+      const tmr=gd(o+1); if(!tmr) return 'Data besok belum tersedia.';
+      if(kn){
+        const r=fr(kn,d), rt=fr(kn,tmr); if(!r||!rt) return 'Data '+kn+' besok belum tersedia.';
+        const df=(rt.fwi-r.fwi).toFixed(1), tr=df>0.5?'\ud83d\udcc8 naik':df<-0.5?'\ud83d\udcc9 turun':'\u27a1\ufe0f stabil';
+        return '<b>'+kn+'</b> \u2014 Tren FWI<br>'+DAY_LABEL[o]+': '+r.fwi+' '+cls(r.fwi,FWI_T)+'<br>'+DAY_LABEL[o+1]+': '+rt.fwi+' '+cls(rt.fwi,FWI_T)+'<br>'+tr+' '+Math.abs(df).toFixed(1)+' poin';
+      } else {
+        const tf=d.regions.filter(r=>r.fwi!=null), tt=tmr.regions.filter(r=>r.fwi!=null);
+        if(!tf.length||!tt.length) return 'Data tren belum tersedia.';
+        const atf=tf.reduce((s,r)=>s+r.fwi,0)/tf.length, att=tt.reduce((s,r)=>s+r.fwi,0)/tt.length, df=(att-atf).toFixed(1);
+        let a='\ud83d\udcca <b>Tren FWI Provinsi</b><br>'+DAY_LABEL[o]+': rata '+atf.toFixed(1)+'<br>'+DAY_LABEL[o+1]+': rata '+att.toFixed(1);
+        if(df>0) a+='<br>\ud83d\udcc8 Naik '+df+' poin';
+        else if(df<0) a+='<br>\ud83d\udcc9 Turun '+Math.abs(df)+' poin';
+        else a+='<br>\u27a1\ufe0f Stabil';
+        return a;
+      }
+    }
 
-      const clsFWI = r.fwi >= 13 ? '🔴 EKSTRIM' : r.fwi >= 7 ? '🟠 TINGGI' : r.fwi >= 2 ? '🟡 SEDANG' : '🟢 RENDAH';
-      const clsFFMC = r.ffmc >= 89 ? '🔴 EKSTRIM' : r.ffmc >= 83 ? '🟠 TINGGI' : r.ffmc >= 76 ? '🟡 SEDANG' : '🟢 RENDAH';
-      const detik = new Date().getSeconds();
-      let reply;
+    async function sr(kn,d,o,q){
+      if(!kn){
+        const ek=d.regions.filter(r=>r.fwi>=13).map(r=>r.name), ti=d.regions.filter(r=>r.fwi>=7&&r.fwi<13).map(r=>r.name);
+        let a='\ud83d\udd25 <b>Rekomendasi \u2014 '+DAY_LABEL[o]+'</b><br>';
+        if(ek.length) a+='\ud83d\udd34 <b>SIAGA DARURAT:</b> '+ek.join(', ')+'<br>\u279c Larang bakar, siapkan posko<br>';
+        if(ti.length) a+='\ud83d\udfe0 <b>WASPADA:</b> '+ti.join(', ')+'<br>\u279c Sosialisasi, cek hotspot<br>';
+        if(!ek.length&&!ti.length) a+='\ud83d\udfe2 Kondisi relatif aman.';
+        return a;
+      }
+      const r=fr(kn,d); if(!r) return 'Data '+kn+' tidak ditemukan.';
+      let a='\ud83d\udd25 <b>Saran '+kn+'</b> \u2014 '+DAY_LABEL[o]+'<br>FWI '+r.fwi+' '+cls(r.fwi,FWI_T)+' | FFMC '+r.ffmc+' '+cls(r.ffmc,FFMC_T)+'<br>';
+      if(r.fwi>=13) a+='\ud83d\udd34 <b>SIAGA DARURAT!</b><br>\u279c Larang bakar, siagakan regu pemadam.';
+      else if(r.fwi>=7) a+='\ud83d\udfe0 <b>WASPADA.</b><br>\u279c Sosialisasi, patroli rutin.';
+      else if(r.fwi>=2) a+='\ud83d\udfe1 <b>SEDANG.</b> Tetap pantau.';
+      else a+='\ud83d\udfe2 <b>AMAN.</b>';
+      if(r.kecamatan){ const t3=[...r.kecamatan].filter(k=>k.fwi>=7).sort((a,b)=>b.fwi-a.fwi).slice(0,3); if(t3.length) a+='<br>\ud83c\udfd9\ufe0f Kec. rawan: '+t3.map(k=>k.name+'(FWI '+k.fwi+')').join(', '); }
+      return a;
+    }
 
-      if(q.includes('kecamatan') || q.includes('rincian') || q.includes('detail') || q.includes('semua')){
-        const kecs = r.kecamatan;
-        if(!kecs || kecs.length===0) return 'Rincian kecamatan untuk ' + kabName + ' belum tersedia.';
-        const sorted = [...kecs].sort((a,b)=> (b.fwi??0)-(a.fwi??0));
-        let list = sorted.slice(0,10).map(k=>{
-          const wc = k.fwi >= 13 ? '🔴' : k.fwi >= 7 ? '🟠' : k.fwi >= 2 ? '🟡' : '🟢';
-          return wc + ' ' + k.name + ' — FWI ' + (k.fwi??'—');
-        }).join('\n');
-        reply = '🏙️ **' + kabName + '** — ' + kecs.length + ' kecamatan\n';
-        reply += 'Rata-rata FWI ' + kecs.reduce((s,k)=> s+(k.fwi||0),0)/kecs.length + '\n';
-        reply += list;
-        if(kecs.length>10) reply += '\n…dan ' + (kecs.length-10) + ' lainnya';
-      }
-      else if(q.includes('tren') || q.includes('naik') || q.includes('turun')){
-        const nextDay = payload.days[1];
-        if(!nextDay) return 'Data besok belum tersedia untuk perbandingan tren.';
-        const nxt = nextDay.regions.find(x=>x.name===kabName);
-        if(!nxt) return 'Data besok untuk ' + kabName + ' belum tersedia.';
-        const diff = (nxt.fwi - r.fwi).toFixed(1);
-        if(diff > 0.5) reply = '📈 FWI ' + kabName + ' diprediksi **naik** ' + diff + ' poin besok. Waspada!';
-        else if(diff < -0.5) reply = '📉 FWI ' + kabName + ' diprediksi **turun** ' + Math.abs(diff) + ' poin besok.';
-        else reply = '➡️ FWI ' + kabName + ' relatif **stabil**.';
-        reply += ' (hari ini: ' + r.fwi + ', besok: ' + nxt.fwi + ')';
-      }
-      else if(q.includes('banding') || q.includes('vs') || q.includes('dan')){
-        reply = '📊 **' + kabName + '** hari ini:\nFWI ' + r.fwi + ' ' + clsFWI + '\nFFMC ' + r.ffmc + ' ' + clsFFMC;
-      }
+    async function dkec(kn,d,o,q){
+      if(!kn) return 'Sebutkan kabupaten dulu, misal <b>"Kecamatan di Kukar"</b>';
+      const r=fr(kn,d); if(!r) return 'Data '+kn+' tidak ditemukan.';
+      if(!r.kecamatan||!r.kecamatan.length) return 'Rincian kecamatan belum tersedia.';
+      const s=[...r.kecamatan].sort((a,b)=>b.fwi-a.fwi),tot=s.length,avg=s.reduce((sk,k)=>sk+(k.fwi||0),0)/tot;
+      let sk=null, words=q.split(' ').filter(w=>w.length>3);
+      for(const k of s) for(const w of words){ if(k.name.toLowerCase().includes(w)){ sk=k; break; } if(sk) break; }
+      let a;
+      if(sk){ a='\ud83c\udfd9\ufe0f <b>'+sk.name+'</b> \u2014 '+kn+'<br>FWI: <b>'+sk.fwi+'</b> '+cls(sk.fwi,FWI_T)+'<br>FFMC: '+(sk.ffmc||''); if(sk.fwi>=7) a+='<br>\u26a0\ufe0f Level waspada!'; }
       else {
-        reply = '🔥 **' + kabName + '** hari ini:\nFWI **' + r.fwi + '** ' + clsFWI + '\nFFMC **' + r.ffmc + '** ' + clsFFMC;
-        if(r.fwi >= 7) reply += '\n⚠️ Level siaga: waspada potensi kebakaran.';
-        else reply += '\n✅ Kondisi relatif aman.';
+        a='\ud83c\udfd9\ufe0f <b>'+kn+'</b> \u2014 '+tot+' kecamatan<br>Rata FWI: <b>'+avg.toFixed(1)+'</b><br><br>';
+        s.slice(0,10).forEach((k,i)=>{ a+=(i+1)+'. '+em(k.fwi,FWI_T)+' '+k.name+' \u2014 FWI '+(k.fwi||''); if(k.ffmc!=null) a+=', FFMC '+k.ffmc; a+='<br>'; });
+        if(tot>10) a+='<br>\u2026dan '+(tot-10)+' lainnya';
+        const ek=s.filter(k=>k.fwi>=13).length, ti=s.filter(k=>k.fwi>=7&&k.fwi<13).length;
+        if(ek||ti) a+='<br><br>\u26a0\ufe0f '+ek+' ekstrim, '+ti+' tinggi.';
       }
-
-      // Simulasi delay biar natural
-      await new Promise(r=> setTimeout(r, 300 + Math.random()*400));
-      return reply.replace(/\n/g, '<br>');
+      return a;
     }
 
-    async function handleSubmit(e){
+    async function dw(kn,d,o,q){
+      const r=fr(kn,d); if(!r) return 'Data '+kn+' tidak tersedia.';
+      let a='\ud83d\udd25 <b>'+kn+'</b> \u2014 '+DAY_LABEL[o]+'<br>\ud83d\udcc5 '+(d.date||'')+'<br>FWI <b>'+r.fwi+'</b> '+cls(r.fwi,FWI_T)+'<br>FFMC <b>'+r.ffmc+'</b> '+cls(r.ffmc,FFMC_T);
+      if(r.kecamatan&&r.kecamatan.length){ const s=[...r.kecamatan].sort((a,b)=>b.fwi-a.fwi); a+='<br>\ud83c\udfd9\ufe0f Kec. terparah: '+s[0].name+' (FWI '+s[0].fwi+')'; const rw=s.filter(k=>k.fwi>=7); if(rw.length>1) a+='<br>\u26a0\ufe0f Rawan: '+rw.slice(0,3).map(k=>k.name+'('+k.fwi+')').join(', '); }
+      if(r.fwi>=13) a+='<br><br>\ud83d\udd34 <b>SIAGA DARURAT!</b> Larang bakar lahan!';
+      else if(r.fwi>=7) a+='<br><br>\ud83d\udfe0 Waspada, pantau terus.';
+      lastRegion=kn; lastDay=o;
+      return a;
+    }
+
+    async function ask(q){
+      st();
+      try{ const r=await hq(q); await new Promise(rr=>setTimeout(rr,200+Math.random()*300)); return r; }
+      catch(e){ return '\ud83d\ude05 Ada error: '+e.message; }
+    }
+
+    async function hs(e){
       e.preventDefault();
-      const q = input.value.trim();
-      if(!q) return;
-
-      appendMsg(q.replace(/</g,'&lt;'), 'user');
-      chatHistory.push({ role: 'user', text: q });
-      input.value = '';
-
-      const reply = await askAI(q);
-      hideTyping();
-      chatHistory.push({ role: 'assistant', text: reply.replace(/<br>/g,'\n') });
-      appendMsg(reply, 'bot');
+      const q=input.value.trim(); if(!q) return;
+      am(q.replace(/</g,'&lt;'),'user'); chatHistory.push({role:'user',text:q}); input.value='';
+      const r=await ask(q); ht(); chatHistory.push({role:'assistant',text:r.replace(/<br>/g,'\\n')}); am(r,'bot');
     }
 
-    toggleBtn.addEventListener('click', ()=>{
-      const hidden = panel.classList.contains('hidden');
-      panel.classList.toggle('hidden');
-      panel.classList.toggle('flex', hidden);
-      if(hidden && !greeted){
-        appendMsg('👋 Halo! Saya asisten AI Karhutla Kaltim. Tanya apa pun soal FWI/FFMC, misal:<br>• <b>FWI Samarinda hari ini?</b><br>• <b>Kecamatan di Kukar gimana?</b><br>• <b>Tren Paser naik atau turun?</b><br>• <b>Saran untuk Kutim?</b>', 'bot');
-        greeted = true;
-      }
-      if(hidden) input.focus();
+    toggleBtn.addEventListener('click',()=>{
+      const h=panel.classList.contains('hidden');
+      panel.classList.toggle('hidden'); panel.classList.toggle('flex',h);
+      if(h&&!greeted){ am('\ud83d\udd25 <b>Sistem Siaga Karhutla Kaltim</b><br>Tentang FWI/FFMC, misal:<br>\u2022 <b>Ringkasan api hari ini</b><br>\u2022 <b>FWI Samarinda besok?</b><br>\u2022 <b>Kecamatan di Kukar</b><br>\u2022 <b>Wilayah terparah</b><br>\u2022 <b>Saran untuk Kutim</b>','bot'); greeted=true; }
+      if(h) input.focus();
     });
-
-    closeBtn.addEventListener('click', ()=>{
-      panel.classList.add('hidden');
-      panel.classList.remove('flex');
-    });
-
-    form.addEventListener('submit', handleSubmit);
+    closeBtn.addEventListener('click',()=>{ panel.classList.add('hidden'); panel.classList.remove('flex'); });
+    form.addEventListener('submit',hs);
   })();
   </script>
 </body>
