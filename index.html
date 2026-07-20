@@ -583,6 +583,7 @@ fetchData(true);
 
 <script>
 (function(){
+  (function(){
   // --- alias nama kabupaten/kota supaya bisa dikenali dari berbagai cara ketik ---
   const KAB_ALIASES = [
     { kab:'Kota Samarinda',           words:['samarinda'] },
@@ -596,39 +597,82 @@ fetchData(true);
     { kab:'Kab. Berau',               words:['berau'] },
     { kab:'Kab. Mahakam Ulu',         words:['mahakam ulu','mahulu'] },
   ];
+
   const CLASS_EMOJI = { rendah:'🟢', sedang:'🟡', tinggi:'🟠', ekstrim:'🔴', nodata:'⚪' };
 
   function norm(s){ return (s||'').toLowerCase().normalize('NFKD').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim(); }
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
   function lower1(s){ return s.charAt(0).toLowerCase() + s.slice(1); }
 
-  // Cari SEMUA kemunculan alias kabupaten di query (dipakai utk "bandingkan A dan B"),
-  // urutkan berdasar posisi kemunculan supaya urutan jawaban sesuai urutan disebut.
-  function findAllKabAliases(qNorm){
-    let hits = []; // {kab, pos, len}
+  // ---------------------------------------------------------------------
+  // Toleransi typo (Levenshtein distance) -- dipakai HANYA sebagai fallback
+  // kalau pencocokan persis gagal, supaya "smarinda" / "balikpapn" tetap
+  // dikenali tanpa bikin salah tangkap kata pendek yang lain.
+  // ---------------------------------------------------------------------
+  function levenshtein(a, b){
+    const m = a.length, n = b.length;
+    if(m===0) return n;
+    if(n===0) return m;
+    const dp = Array.from({length:m+1}, ()=> new Array(n+1).fill(0));
+    for(let i=0;i<=m;i++) dp[i][0]=i;
+    for(let j=0;j<=n;j++) dp[0][j]=j;
+    for(let i=1;i<=m;i++){
+      for(let j=1;j<=n;j++){
+        dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+      }
+    }
+    return dp[m][n];
+  }
+
+  function exactFindAllKabAliases(qNorm){
+    let hits = [];
     KAB_ALIASES.forEach(entry=>{
       entry.words.forEach(w=>{
         const pos = qNorm.indexOf(w);
         if(pos>-1) hits.push({kab:entry.kab, pos, len:w.length});
       });
     });
-    // buang duplikat kabupaten yang sama, ambil match terpanjang per kabupaten
     const byKab = {};
     hits.forEach(h=>{ if(!byKab[h.kab] || h.len>byKab[h.kab].len) byKab[h.kab]=h; });
     return Object.values(byKab).sort((a,b)=>a.pos-b.pos).map(h=>h.kab);
   }
 
-  function findKabAlias(qNorm){
-    const all = findAllKabAliases(qNorm);
-    if(all.length===0) return null;
-    // kalau banyak, pilih alias dg kata terpanjang (paling spesifik)
-    let best=null, bestLen=0;
+  function fuzzyFindKabAlias(qNorm){
+    const tokens = qNorm.split(' ').filter(t=>t.length>=4);
+    let best=null, bestDist=Infinity;
     KAB_ALIASES.forEach(entry=>{
       entry.words.forEach(w=>{
-        if(qNorm.includes(w) && w.length>bestLen){ best=entry.kab; bestLen=w.length; }
+        if(w.length<5) return; // kata pendek (ppu dll) terlalu berisiko utk fuzzy
+        tokens.forEach(t=>{
+          if(Math.abs(t.length-w.length)>2) return;
+          const d = levenshtein(t,w);
+          const maxDist = w.length<=7 ? 1 : 2;
+          if(d<=maxDist && d<bestDist){ bestDist=d; best=entry.kab; }
+        });
       });
     });
     return best;
+  }
+
+  function findAllKabAliases(qNorm){
+    const exact = exactFindAllKabAliases(qNorm);
+    if(exact.length) return exact;
+    const fz = fuzzyFindKabAlias(qNorm);
+    return fz ? [fz] : [];
+  }
+
+  function findKabAlias(qNorm){
+    const exact = exactFindAllKabAliases(qNorm);
+    if(exact.length){
+      let best=null, bestLen=0;
+      KAB_ALIASES.forEach(entry=>{
+        entry.words.forEach(w=>{
+          if(qNorm.includes(w) && w.length>bestLen){ best=entry.kab; bestLen=w.length; }
+        });
+      });
+      return best;
+    }
+    return fuzzyFindKabAlias(qNorm);
   }
 
   function findKecamatan(qNorm, day){
@@ -647,9 +691,8 @@ fetchData(true);
   function detectDayOffset(qNorm){
     if(qNorm.includes('lusa')) return 2;
     if(qNorm.includes('besok')) return 1;
-    return 0; // default: hari ini
+    return 0;
   }
-
   function detectMetric(qNorm){
     const wantFfmc = qNorm.includes('ffmc');
     const wantFwi = qNorm.includes('fwi') || qNorm.includes('fire weather');
@@ -657,37 +700,31 @@ fetchData(true);
     if(wantFwi && !wantFfmc) return 'fwi';
     return 'both';
   }
-
   function fmtVal(v){ return v==null ? 'belum ada data' : v; }
 
-  // --- kalimat natural (dipilih acak dari beberapa variasi) utk 1 wilayah ---
   function describeRegion(r, dayLabel, metric){
     const fcls = classifyFFMC(r.ffmc), wcls = classifyFWI(r.fwi);
     const dl = lower1(dayLabel);
-
     if(metric==='fwi'){
       if(r.fwi==null) return `Untuk <b>${r.name}</b> ${dl}, datanya belum tersedia 🤷`;
-      const tmpl = [
+      return pick([
         `${CLASS_EMOJI[wcls]} FWI <b>${r.name}</b> ${dl} ada di <b>${r.fwi}</b>, masuk kategori <b>${CLASS_LABEL[wcls]}</b>.`,
         `${dayLabel}, Fire Weather Index untuk <b>${r.name}</b> tercatat <b>${r.fwi}</b> ${CLASS_EMOJI[wcls]} (${CLASS_LABEL[wcls]}).`,
-      ];
-      return pick(tmpl);
+      ]);
     }
     if(metric==='ffmc'){
       if(r.ffmc==null) return `Untuk <b>${r.name}</b> ${dl}, datanya belum tersedia 🤷`;
-      const tmpl = [
+      return pick([
         `${CLASS_EMOJI[fcls]} FFMC <b>${r.name}</b> ${dl} ada di <b>${r.ffmc}</b>, kategori <b>${CLASS_LABEL[fcls]}</b>.`,
         `${dayLabel}, kekeringan permukaan lahan (FFMC) di <b>${r.name}</b> tercatat <b>${r.ffmc}</b> ${CLASS_EMOJI[fcls]} (${CLASS_LABEL[fcls]}).`,
-      ];
-      return pick(tmpl);
+      ]);
     }
     if(r.ffmc==null && r.fwi==null) return `Untuk <b>${r.name}</b> ${dl}, datanya belum tersedia 🤷`;
-    const tmpl = [
+    return pick([
       `${CLASS_EMOJI[wcls]} <b>${r.name}</b> ${dl}: FWI <b>${fmtVal(r.fwi)}</b> (${r.fwi!=null?CLASS_LABEL[wcls]:'-'}), FFMC <b>${fmtVal(r.ffmc)}</b> (${r.ffmc!=null?CLASS_LABEL[fcls]:'-'}).`,
       `Kondisi <b>${r.name}</b> ${dl} — FWI <b>${fmtVal(r.fwi)}</b> ${CLASS_EMOJI[wcls]} · FFMC <b>${fmtVal(r.ffmc)}</b> ${CLASS_EMOJI[fcls]}.`,
       `${dayLabel} di <b>${r.name}</b>, status <b>${CLASS_LABEL[wcls]}</b> (FWI ${fmtVal(r.fwi)}) dengan FFMC ${fmtVal(r.ffmc)}.`,
-    ];
-    return pick(tmpl);
+    ]);
   }
 
   function describeKecamatan(k, kabName, dayLabel, metric){
@@ -705,7 +742,6 @@ fetchData(true);
     return `${CLASS_EMOJI[wcls]} <b>${k.name}</b> di ${kabName}, ${dl}: FWI <b>${fmtVal(k.fwi)}</b> (${k.fwi!=null?CLASS_LABEL[wcls]:'-'}), FFMC <b>${fmtVal(k.ffmc)}</b> (${k.ffmc!=null?CLASS_LABEL[fcls]:'-'}).`;
   }
 
-  // --- ringkasan rata-rata provinsi (dipakai utk pertanyaan "kondisi kaltim") ---
   function provinceSummary(day, dayLabel){
     const fwiVals = day.regions.map(r=>r.fwi).filter(v=>v!=null);
     const ffmcVals = day.regions.map(r=>r.ffmc).filter(v=>v!=null);
@@ -719,12 +755,10 @@ fetchData(true);
     return msg;
   }
 
-  // --- tren naik/turun dibanding hari berikutnya ---
   function trendAnswer(name, isKec, kabName, day, dayLabel){
     const idx = payload.days.findIndex(d=>d.offset===day.offset);
     const nextDay = payload.days[idx+1];
     if(!nextDay) return `Tidak ada data hari berikutnya untuk dibandingkan dengan ${dayLabel}.`;
-
     function getVal(d){
       if(isKec){
         const r = d.regions.find(x=>x.name===kabName);
@@ -743,64 +777,183 @@ fetchData(true);
     return `➡️ FWI <b>${name}</b> diperkirakan relatif <b>stabil</b>, dari ${cur} (${lower1(dayLabel)}) ke ${nxt} (${nextLabel}).`;
   }
 
+  function multiDayAnswer(name, isKec, kabName, metric){
+    function getVals(d){
+      if(isKec){
+        const r = d.regions.find(x=>x.name===kabName);
+        const k = r ? (r.kecamatan||[]).find(x=>x.name===name) : null;
+        return k ? {ffmc:k.ffmc, fwi:k.fwi} : {ffmc:null, fwi:null};
+      }
+      const r = d.regions.find(x=>x.name===name);
+      return r ? {ffmc:r.ffmc, fwi:r.fwi} : {ffmc:null, fwi:null};
+    }
+    const lines = payload.days.map(d=>{
+      const v = getVals(d);
+      const lbl = DAY_NAMES[d.offset] || ('H+'+d.offset);
+      if(metric==='ffmc') return `• ${lbl} (${d.date}): FFMC <b>${fmtVal(v.ffmc)}</b>`;
+      if(metric==='fwi') return `• ${lbl} (${d.date}): FWI <b>${fmtVal(v.fwi)}</b>`;
+      return `• ${lbl} (${d.date}): FWI <b>${fmtVal(v.fwi)}</b>, FFMC <b>${fmtVal(v.ffmc)}</b>`;
+    });
+    return `Perkiraan <b>${name}</b>${kabName?' ('+kabName+')':''} untuk ${payload.days.length} hari ke depan:<br>` + lines.join('<br>');
+  }
+
+  // ---------------------------------------------------------------------
+  // MEMORI PERCAKAPAN -- inilah bagian intinya. Chatbot menyimpan wilayah,
+  // hari, dan metrik yang terakhir dibicarakan, supaya pertanyaan lanjutan
+  // yang tidak menyebut ulang nama wilayah tetap nyambung.
+  //   User : "FWI Samarinda hari ini?"
+  //   User : "kalau besok?"          -> otomatis tetap soal Samarinda
+  //   User : "FFMC-nya berapa?"      -> otomatis tetap Samarinda & besok
+  // ---------------------------------------------------------------------
+  let context = {
+    lastKab: null,        // nama kabupaten terakhir dibahas
+    lastKecInfo: null,    // {kec:{...}, kab:'...'} kecamatan terakhir dibahas
+    lastDayOffset: 0,
+    lastMetric: 'both',
+    history: [],          // {q, a}
+  };
+
+  function rememberKab(kabName){ context.lastKab = kabName; context.lastKecInfo = null; }
+  function rememberKec(kecInfo){ context.lastKecInfo = kecInfo; context.lastKab = kecInfo.kab; }
+  function pushHistory(q, a){
+    context.history.push({q, a});
+    if(context.history.length > 20) context.history.shift();
+  }
+
+  const FOLLOWUP_CUES = /(itu|nya\b|gimana|kalau|terus|lalu|dong|dia|situ|tadi|sekarang)/;
+
   function answerQuery(rawQuery){
     const q = norm(rawQuery);
     if(!q) return 'Coba ketik pertanyaan dulu ya 🙂';
 
     if(/^(hai|halo|hi|hey|p|tolong|bantuan|help)$/.test(q) || q.length<=3){
-      return 'Halo! 👋 Saya bisa bantu jawab soal FFMC/FWI. Contoh yang bisa ditanya:<br>' +
-        '• <i>"FWI Samarinda hari ini?"</i><br>' +
-        '• <i>"Kutai Timur besok gimana?"</i><br>' +
+      const ans = 'Halo! 👋 Saya bisa bantu jawab soal FFMC/FWI, dan saya ingat konteks obrolan kita. Contoh:<br>' +
+        '• <i>"FWI Samarinda hari ini?"</i> lalu <i>"kalau besok?"</i><br>' +
         '• <i>"Kecamatan mana yang paling parah?"</i><br>' +
         '• <i>"Bandingkan Samarinda dan Balikpapan"</i><br>' +
         '• <i>"Tren FWI Paser gimana?"</i><br>' +
-        '• <i>"Kondisi Kaltim hari ini gimana?"</i><br>' +
-        '• <i>"Saran untuk Kukar apa?"</i>';
+        '• <i>"Apa itu FWI?"</i>';
+      return ans;
+    }
+
+    if(/(terima kasih|makasih|thanks|thx)/.test(q)){
+      return pick(['Sama-sama! 🙏 Ada lagi yang mau ditanyakan?', 'Siap, senang bisa bantu! 😊 Ada lagi?']);
+    }
+    if(/(dadah|^bye\b|sampai jumpa|sudah dulu ya|cukup dulu)/.test(q)){
+      return pick(['Sampai jumpa! Tetap waspada karhutla ya 👋', 'Oke, hati-hati selalu 👋']);
+    }
+    if(/(lupakan|reset konteks|mulai dari awal|hapus riwayat)/.test(q)){
+      context = { lastKab:null, lastKecInfo:null, lastDayOffset:0, lastMetric:'both', history:[] };
+      return 'Oke, saya lupakan konteks obrolan sebelumnya. Mulai dari awal ya 🔄';
+    }
+    if(/(riwayat pertanyaan|history|tadi saya tanya apa|pertanyaan sebelumnya)/.test(q)){
+      if(context.history.length===0) return 'Belum ada riwayat pertanyaan di sesi ini.';
+      const recent = context.history.slice(-3);
+      return 'Beberapa pertanyaan terakhir Anda:<br>' + recent.map((h,i)=>`${i+1}. <i>"${h.q}"</i>`).join('<br>');
+    }
+    if(/(apa itu ffmc|ffmc itu apa|definisi ffmc|arti ffmc)/.test(q)){
+      const ans = 'FFMC (Fine Fuel Moisture Code) mengukur tingkat kekeringan bahan bakar ringan di permukaan tanah — dedaunan gugur, ranting kecil, alang-alang. Skala 0–101, makin tinggi makin kering & mudah tersulut.';
+      pushHistory(rawQuery, ans); return ans;
+    }
+    if(/(apa itu fwi|fwi itu apa|definisi fwi|arti fwi)/.test(q)){
+      const ans = 'FWI (Fire Weather Index) menggabungkan kekeringan bahan bakar dengan kondisi cuaca untuk memperkirakan seberapa besar & cepat api bisa membesar kalau kebakaran terjadi. Ini indeks status siaga utama di dashboard.';
+      pushHistory(rawQuery, ans); return ans;
     }
 
     if(!payload.days || payload.days.length===0){
       return 'Data belum berhasil dimuat, coba klik tombol "Perbarui" di atas dulu ya.';
     }
 
-    const offset = detectDayOffset(q);
+    const explicitDay = /(hari ini|besok|lusa)/.test(q);
+    const offset = explicitDay ? detectDayOffset(q) : (context.lastDayOffset ?? 0);
     const day = payload.days.find(d=>d.offset===offset) || payload.days[0];
     const dayLabel = DAY_NAMES[day.offset] || ('H+' + day.offset);
-    const metric = detectMetric(q);
+
+    const explicitMetric = /(ffmc|fwi|fire weather)/.test(q);
+    const kecMatchNow = findKecamatan(q, day);
+    const kabAliasesNow = findAllKabAliases(q);
+    const hasExplicitEntity = !!kecMatchNow || kabAliasesNow.length>0;
+    // Metrik ikut konteks lama HANYA kalau ini follow-up (tidak ada wilayah baru
+    // disebut). Kalau wilayah baru disebut eksplisit, default ke "both" supaya
+    // tidak nyasar ikut preferensi metrik dari topik sebelumnya yang tidak nyambung.
+    const metric = explicitMetric ? detectMetric(q) : (hasExplicitEntity ? 'both' : (context.lastMetric || 'both'));
 
     // --- ringkasan provinsi ---
     if(/(kaltim|kalimantan timur|provinsi)/.test(q) && /(kondisi|gimana|bagaimana|ringkasan|secara umum|status)/.test(q)){
-      return provinceSummary(day, dayLabel);
+      const ans = provinceSummary(day, dayLabel);
+      pushHistory(rawQuery, ans);
+      return ans;
+    }
+
+    // --- multi-hari ("3 hari kedepan", dst) ---
+    if(/(3 hari|tiga hari|beberapa hari|minggu ini|seminggu|semua hari|hari hari kedepan|hari kedepan)/.test(q)){
+      let name=null, isKec=false, kabName=null;
+      if(kecMatchNow){ name=kecMatchNow.kec.name; isKec=true; kabName=kecMatchNow.kab; rememberKec(kecMatchNow); }
+      else if(kabAliasesNow.length){ name=kabAliasesNow[0]; rememberKab(name); }
+      else if(context.lastKecInfo){ name=context.lastKecInfo.kec.name; isKec=true; kabName=context.lastKecInfo.kab; }
+      else if(context.lastKab){ name=context.lastKab; }
+      if(!name) return 'Perkiraan beberapa hari ke depan untuk wilayah mana? Sebutkan nama kabupaten/kota atau kecamatannya ya.';
+      const ans = multiDayAnswer(name, isKec, kabName, metric);
+      context.lastMetric = metric;
+      pushHistory(rawQuery, ans);
+      return ans;
     }
 
     // --- tren naik/turun ---
     if(/(tren|trend|naik|turun|meningkat|menurun)/.test(q)){
-      const kecMatch = findKecamatan(q, day);
-      if(kecMatch) return trendAnswer(kecMatch.kec.name, true, kecMatch.kab, day, dayLabel);
+      if(kecMatchNow){ rememberKec(kecMatchNow); context.lastDayOffset=offset; context.lastMetric=metric;
+        const ans = trendAnswer(kecMatchNow.kec.name, true, kecMatchNow.kab, day, dayLabel); pushHistory(rawQuery, ans); return ans; }
       const kabMatch = findKabAlias(q);
-      if(kabMatch) return trendAnswer(kabMatch, false, null, day, dayLabel);
+      if(kabMatch){ rememberKab(kabMatch); context.lastDayOffset=offset; context.lastMetric=metric;
+        const ans = trendAnswer(kabMatch, false, null, day, dayLabel); pushHistory(rawQuery, ans); return ans; }
+      if(context.lastKecInfo){
+        const ans = trendAnswer(context.lastKecInfo.kec.name, true, context.lastKecInfo.kab, day, dayLabel);
+        pushHistory(rawQuery, ans); return ans;
+      }
+      if(context.lastKab){
+        const ans = trendAnswer(context.lastKab, false, null, day, dayLabel);
+        pushHistory(rawQuery, ans); return ans;
+      }
       return 'Tren wilayah mana yang mau dicek? Sebutkan nama kabupaten/kota atau kecamatannya ya.';
     }
 
     // --- saran / rekomendasi tindakan ---
     if(/(saran|rekomendasi|harus apa|tindakan|antisipasi)/.test(q)){
-      const kecMatch = findKecamatan(q, day);
-      const kabMatch = findKabAlias(q);
-      if(kecMatch){
-        const wcls = classifyFWI(kecMatch.kec.fwi), fcls = classifyFFMC(kecMatch.kec.ffmc);
-        return panduanUmum(wcls, fcls, kecMatch.kec.name + ' (' + kecMatch.kab + ')');
+      if(kecMatchNow){
+        rememberKec(kecMatchNow); context.lastDayOffset=offset; context.lastMetric=metric;
+        const wcls = classifyFWI(kecMatchNow.kec.fwi), fcls = classifyFFMC(kecMatchNow.kec.ffmc);
+        const ans = panduanUmum(wcls, fcls, kecMatchNow.kec.name + ' (' + kecMatchNow.kab + ')');
+        pushHistory(rawQuery, ans); return ans;
       }
+      const kabMatch = findKabAlias(q);
       if(kabMatch){
         const r = day.regions.find(x=>x.name===kabMatch);
         if(r){
+          rememberKab(kabMatch); context.lastDayOffset=offset; context.lastMetric=metric;
           const wcls = classifyFWI(r.fwi), fcls = classifyFFMC(r.ffmc);
-          return panduanUmum(wcls, fcls, r.name);
+          const ans = panduanUmum(wcls, fcls, r.name);
+          pushHistory(rawQuery, ans); return ans;
+        }
+      }
+      // fallback ke konteks kalau tidak sebut nama wilayah lagi
+      if(context.lastKecInfo){
+        const wcls = classifyFWI(context.lastKecInfo.kec.fwi), fcls = classifyFFMC(context.lastKecInfo.kec.ffmc);
+        const ans = panduanUmum(wcls, fcls, context.lastKecInfo.kec.name + ' (' + context.lastKecInfo.kab + ')');
+        pushHistory(rawQuery, ans); return ans;
+      }
+      if(context.lastKab){
+        const r = day.regions.find(x=>x.name===context.lastKab);
+        if(r){
+          const wcls = classifyFWI(r.fwi), fcls = classifyFFMC(r.ffmc);
+          const ans = panduanUmum(wcls, fcls, r.name);
+          pushHistory(rawQuery, ans); return ans;
         }
       }
       return 'Saran untuk wilayah mana? Sebutkan nama kabupaten/kota atau kecamatannya ya, misalnya "saran untuk Paser".';
     }
 
     // --- bandingkan 2 daerah ---
-    if(/(bandingkan|dibanding|vs|versus|dan)/.test(q)){
+    if(/(bandingkan|dibanding|vs|versus)/.test(q)){
       const kabs = findAllKabAliases(q);
       if(kabs.length>=2){
         const r1 = day.regions.find(x=>x.name===kabs[0]);
@@ -808,20 +961,20 @@ fetchData(true);
         if(r1 && r2){
           let msg = `Perbandingan ${lower1(dayLabel)}:<br>` + describeRegion(r1, dayLabel, metric) + '<br>' + describeRegion(r2, dayLabel, metric);
           if(r1.fwi!=null && r2.fwi!=null){
-            const higher = r1.fwi>=r2.fwi ? r1 : r2, lower = r1.fwi>=r2.fwi ? r2 : r1;
-            if(r1.fwi!==r2.fwi) msg += `<br><br>👉 <b>${higher.name}</b> lebih berisiko dibanding <b>${lower.name}</b> saat ini.`;
+            const higher = r1.fwi>=r2.fwi ? r1 : r2, lowerR = r1.fwi>=r2.fwi ? r2 : r1;
+            if(r1.fwi!==r2.fwi) msg += `<br><br>👉 <b>${higher.name}</b> lebih berisiko dibanding <b>${lowerR.name}</b> saat ini.`;
             else msg += `<br><br>👉 Keduanya berstatus sama.`;
           }
+          context.lastDayOffset=offset; context.lastMetric=metric;
+          pushHistory(rawQuery, msg);
           return msg;
         }
       }
-      // kalau cuma ketemu 1 nama daerah dg kata 'dan'/'vs' dsb, lanjut ke pencocokan normal di bawah (jangan return dulu)
     }
 
-    // --- pertanyaan "paling parah / tertinggi / terparah" ---
+    // --- pertanyaan "paling parah / tertinggi" ---
     if(/(paling parah|terparah|tertinggi|paling tinggi|paling bahaya|paling berisiko)/.test(q)){
-      const kecMode = q.includes('kecamatan');
-      if(kecMode){
+      if(q.includes('kecamatan')){
         let worst = null, worstKab = null;
         day.regions.forEach(r=>{
           (r.kecamatan||[]).forEach(k=>{
@@ -829,49 +982,90 @@ fetchData(true);
           });
         });
         if(!worst) return `Belum ada data kecamatan dengan FWI untuk ${lower1(dayLabel)}.`;
-        return `Kecamatan paling parah ${lower1(dayLabel)} adalah ` + describeKecamatan(worst, worstKab, dayLabel, metric);
+        rememberKec({kec:worst, kab:worstKab}); context.lastDayOffset=offset; context.lastMetric=metric;
+        const ans = `Kecamatan paling parah ${lower1(dayLabel)} adalah ` + describeKecamatan(worst, worstKab, dayLabel, metric);
+        pushHistory(rawQuery, ans); return ans;
       }
       const sorted = [...day.regions].filter(r=>r.fwi!=null).sort((a,b)=>b.fwi-a.fwi);
       if(sorted.length===0) return `Belum ada data FWI untuk ${lower1(dayLabel)}.`;
-      return `Yang paling parah ${lower1(dayLabel)} adalah ` + describeRegion(sorted[0], dayLabel, metric);
+      rememberKab(sorted[0].name); context.lastDayOffset=offset; context.lastMetric=metric;
+      const ans = `Yang paling parah ${lower1(dayLabel)} adalah ` + describeRegion(sorted[0], dayLabel, metric);
+      pushHistory(rawQuery, ans); return ans;
     }
 
     // --- pertanyaan "paling rendah / aman" ---
     if(/(paling rendah|paling aman|teraman|paling bagus|paling minim)/.test(q)){
       const sorted = [...day.regions].filter(r=>r.fwi!=null).sort((a,b)=>a.fwi-b.fwi);
       if(sorted.length===0) return `Belum ada data FWI untuk ${lower1(dayLabel)}.`;
-      return `Yang paling aman ${lower1(dayLabel)} adalah ` + describeRegion(sorted[0], dayLabel, metric);
+      rememberKab(sorted[0].name); context.lastDayOffset=offset; context.lastMetric=metric;
+      const ans = `Yang paling aman ${lower1(dayLabel)} adalah ` + describeRegion(sorted[0], dayLabel, metric);
+      pushHistory(rawQuery, ans); return ans;
     }
 
-    // --- hitung jumlah wilayah per status ("berapa daerah status tinggi") ---
+    // --- hitung jumlah wilayah per status ---
     const statusWord = ['ekstrim','tinggi','sedang','rendah'].find(s=>q.includes(s));
     if(statusWord && /(berapa|jumlah|ada berapa)/.test(q)){
       const count = day.regions.filter(r=>classifyFWI(r.fwi)===statusWord).length;
       const names = day.regions.filter(r=>classifyFWI(r.fwi)===statusWord).map(r=>r.name);
       let msg = `${CLASS_EMOJI[statusWord]} Ada <b>${count}</b> kabupaten/kota berstatus <b>${CLASS_LABEL[statusWord]}</b> ${lower1(dayLabel)}`;
-      if(count>0) msg += `: ${names.join(', ')}.`; else msg += '.';
+      msg += count>0 ? `: ${names.join(', ')}.` : '.';
+      pushHistory(rawQuery, msg);
       return msg;
     }
 
-    // --- coba cocokkan kecamatan dulu (lebih spesifik), baru kabupaten ---
-    const kecMatch = findKecamatan(q, day);
-    if(kecMatch) return describeKecamatan(kecMatch.kec, kecMatch.kab, dayLabel, metric);
-
+    // --- entitas eksplisit disebut di query ini ---
+    if(kecMatchNow){
+      rememberKec(kecMatchNow); context.lastDayOffset=offset; context.lastMetric=metric;
+      const ans = describeKecamatan(kecMatchNow.kec, kecMatchNow.kab, dayLabel, metric);
+      pushHistory(rawQuery, ans);
+      return ans;
+    }
     const kabMatch = findKabAlias(q);
     if(kabMatch){
       const r = day.regions.find(x=>x.name===kabMatch);
-      if(r) return describeRegion(r, dayLabel, metric);
+      if(r){
+        rememberKab(kabMatch); context.lastDayOffset=offset; context.lastMetric=metric;
+        const ans = describeRegion(r, dayLabel, metric);
+        pushHistory(rawQuery, ans);
+        return ans;
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // FOLLOW-UP: tidak ada nama wilayah baru disebut, tapi ada konteks
+    // tersimpan dari pertanyaan sebelumnya (mis. cuma "kalau besok?"
+    // atau "FFMC-nya berapa?") -- inilah inti fitur "memori" chatbot.
+    // ---------------------------------------------------------------
+    const looksLikeFollowUp = !hasExplicitEntity && (context.lastKab || context.lastKecInfo) &&
+                               (explicitDay || explicitMetric || FOLLOWUP_CUES.test(q));
+    if(looksLikeFollowUp){
+      let ans;
+      if(context.lastKecInfo){
+        const kRegion = day.regions.find(r=>r.name===context.lastKecInfo.kab);
+        const kec = kRegion ? (kRegion.kecamatan||[]).find(x=>x.name===context.lastKecInfo.kec.name) : null;
+        ans = kec ? describeKecamatan(kec, context.lastKecInfo.kab, dayLabel, metric)
+                  : `Data <b>${context.lastKecInfo.kec.name}</b> untuk ${lower1(dayLabel)} tidak ditemukan.`;
+      } else {
+        const r = day.regions.find(x=>x.name===context.lastKab);
+        ans = r ? describeRegion(r, dayLabel, metric) : `Data <b>${context.lastKab}</b> untuk ${lower1(dayLabel)} tidak ditemukan.`;
+      }
+      context.lastDayOffset = offset; context.lastMetric = metric;
+      pushHistory(rawQuery, ans);
+      return ans;
     }
 
     const fallback = [
       'Hmm, belum kenal nama daerah itu 🤔 Coba sebutkan nama kabupaten/kota (Samarinda, Balikpapan, Bontang, Kukar, Kutai Timur, Kutai Barat, Paser, PPU, Berau, Mahakam Ulu) atau nama kecamatannya ya.',
       'Wilayahnya belum saya kenali 🙏 Coba ketik nama kabupaten/kota atau kecamatan yang lebih spesifik, misalnya "FWI Bontang besok" atau "kondisi Kukar hari ini".',
     ];
-    return pick(fallback);
+    const ans = pick(fallback);
+    pushHistory(rawQuery, ans);
+    return ans;
   }
 
   function appendMsg(html, who){
     const log = document.getElementById('chatLog');
+    if(!log) return;
     const bubble = document.createElement('div');
     bubble.className = who==='user'
       ? 'ml-auto max-w-[85%] bg-red-600 text-white rounded-xl rounded-br-sm px-3 py-2'
@@ -886,31 +1080,33 @@ fetchData(true);
   const closeBtn = document.getElementById('chatCloseBtn');
   const form = document.getElementById('chatForm');
   const input = document.getElementById('chatInput');
-
   let greeted = false;
-  toggleBtn.addEventListener('click', ()=>{
-    const hidden = panel.classList.contains('hidden');
-    panel.classList.toggle('hidden');
-    panel.classList.toggle('flex', hidden);
-    if(hidden && !greeted){
-      appendMsg(answerQuery('halo'), 'bot');
-      greeted = true;
-    }
-    if(hidden) input.focus();
-  });
-  closeBtn.addEventListener('click', ()=>{
-    panel.classList.add('hidden');
-    panel.classList.remove('flex');
-  });
 
-  form.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const q = input.value.trim();
-    if(!q) return;
-    appendMsg(q.replace(/</g,'&lt;'), 'user');
-    input.value = '';
-    setTimeout(()=> appendMsg(answerQuery(q), 'bot'), 150);
-  });
+  if(toggleBtn){
+    toggleBtn.addEventListener('click', ()=>{
+      const hidden = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden');
+      panel.classList.toggle('flex', hidden);
+      if(hidden && !greeted){ appendMsg(answerQuery('halo'), 'bot'); greeted = true; }
+      if(hidden) input.focus();
+    });
+    closeBtn.addEventListener('click', ()=>{
+      panel.classList.add('hidden');
+      panel.classList.remove('flex');
+    });
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const q = input.value.trim();
+      if(!q) return;
+      appendMsg(q.replace(/</g,'&lt;'), 'user');
+      input.value = '';
+      setTimeout(()=> appendMsg(answerQuery(q), 'bot'), 150);
+    });
+  }
+
+  // diekspos ke window HANYA untuk keperluan automated testing
+  if(typeof window !== 'undefined') window.__answerQuery = answerQuery;
+  if(typeof window !== 'undefined') window.__chatContext = ()=>context;
 })();
 </script>
 </body>
