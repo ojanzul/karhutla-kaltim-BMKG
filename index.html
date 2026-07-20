@@ -853,14 +853,58 @@ fetchData(true);
       return msg;
     }
 
-    // --- coba cocokkan kecamatan dulu (lebih spesifik), baru kabupaten ---
-    const kecMatch = findKecamatan(q, day);
-    if(kecMatch) return describeKecamatan(kecMatch.kec, kecMatch.kab, dayLabel, metric);
+    // === MULAI COCOKKAN ===
 
+    // 1) DETEKSI PERMINTAAN LIHAT KECAMATAN (follow-up atau langsung)
+    const inginKecamatan = /(kecamatan|kecamatan.?nya|rincian detail|breakdown|list|daftar|semua)/.test(q);
+
+    if(inginKecamatan){
+      // Coba pakai nama kabupaten yg disebut di query
+      let kabTarget = findKabAlias(q);
+      // Kalau gak disebut, pakai lastRegion (konteks percakapan)
+      if(!kabTarget && lastRegion) kabTarget = lastRegion;
+      if(kabTarget){
+        const r = day.regions.find(x=>x.name===kabTarget);
+        if(r){
+          const result = showKecamatanSummary(kabTarget, day, dayLabel);
+          if(result) return result;
+        }
+      }
+      // Gagal juga — arahkan user
+      let hint = lastRegion
+        ? `seperti rincian kecamatan untuk <b>${lastRegion}</b>`
+        : 'nama kabupaten/kota (Samarinda, Balikpapan, Kukar, Kutim, Kubar, Paser, PPU, Berau, Mahulu, Bontang)';
+      return `Kamu mau lihat rincian kecamatan di ${hint}? Coba ketik misalnya "kecamatan Samarinda besok" atau "detail Kukar hari ini".`;
+    }
+
+    // 2) FOLLOW-UP LEWAT KONTEKS — query pendek tanpa nama daerah, tapi ada lastRegion
+    const tidakAdaNamaDaerah = !findKabAlias(q) && !findKecamatan(q, day);
+    if(tidakAdaNamaDaerah && lastRegion){
+      // "gimana?", "besok?", "kalo hari ini?", "ffmc-nya?", "fwi-nya?"
+      if(/(gimana|bagaimana|kondisi|status|ffmc|fwi)/.test(q) || /^(hari ini|besok|lusa|\?)?$/.test(q.trim()) || q.length < 8){
+        const r = day.regions.find(x=>x.name===lastRegion);
+        if(r) return describeRegion(r, dayLabel, metric);
+      }
+    }
+
+    // 3) COCOKKAN KECAMATAN
+    const kecMatch = findKecamatan(q, day);
+    if(kecMatch){
+      saveContextFromQuery(q, day); // simpan konteks juga
+      return describeKecamatan(kecMatch.kec, kecMatch.kab, dayLabel, metric);
+    }
+
+    // 4) COCOKKAN KABUPATEN — simpan konteks
     const kabMatch = findKabAlias(q);
     if(kabMatch){
+      saveContextFromQuery(q, day);
       const r = day.regions.find(x=>x.name===kabMatch);
       if(r) return describeRegion(r, dayLabel, metric);
+    }
+
+    // 5) FALLBACK — kalau masih ada lastRegion, kasih petunjuk lebih ramah
+    if(lastRegion){
+      return `Mau tanya soal <b>${lastRegion}</b> lagi? Coba ketik "FWI ${lastRegion}" atau "kecamatan ${lastRegion}" ya. Atau sebut kabupaten/kota lain yang mau dicek.`;
     }
 
     const fallback = [
@@ -886,6 +930,42 @@ fetchData(true);
   const closeBtn = document.getElementById('chatCloseBtn');
   const form = document.getElementById('chatForm');
   const input = document.getElementById('chatInput');
+
+  // --- KONTEKS PERCAKAPAN (agar follow-up seperti "kalo di kecamatannya?" bisa dipahami) ---
+  let lastRegion = null;
+  let lastDayOffset = 0;
+
+  function saveContextFromQuery(qNorm, day){
+    KAB_ALIASES.forEach(entry=>{
+      entry.words.forEach(w=>{
+        if(qNorm.includes(w)){ lastRegion = entry.kab; }
+      });
+    });
+  }
+
+  /** Tampilkan semua kecamatan untuk suatu kabupaten */
+  function showKecamatanSummary(regionName, day, dayLabel){
+    const r = day.regions.find(x=>x.name===regionName);
+    if(!r) return null;
+    const kecs = r.kecamatan;
+    if(!kecs || kecs.length===0) return `Rincian kecamatan untuk <b>${regionName}</b> ${dayLabel} belum tersedia 🤷`;
+    const sorted = [...kecs].sort((a,b)=>(b.fwi??0)-(a.fwi??0));
+    let totalFwi=0, cntFwi=0, totalFfmc=0, cntFfmc=0;
+    sorted.forEach(k=>{ if(k.fwi!=null){ totalFwi+=k.fwi; cntFwi++; } if(k.ffmc!=null){ totalFfmc+=k.ffmc; cntFfmc++; } });
+    const avgFwi = cntFwi ? (totalFwi/cntFwi).toFixed(1) : '—';
+    const avgFfmc = cntFfmc ? (totalFfmc/cntFfmc).toFixed(1) : '—';
+    const worst = sorted[0];
+    const wcWorst = classifyFWI(worst.fwi);
+    let html = `<b>🏙️ ${regionName}</b> — ${kecs.length} kecamatan${dayLabel!=='hari ini' ? ' ('+dayLabel+')' : ''}`;
+    html += `<br>Rata-rata: FWI <b>${avgFwi}</b> · FFMC <b>${avgFfmc}</b>`;
+    html += `<br>Terparah: <b>${worst.name}</b> (FWI ${worst.fwi} ${CLASS_EMOJI[wcWorst]})<br><br>`;
+    html += sorted.slice(0, 15).map(k=>{
+      const wc = classifyFWI(k.fwi), fc = classifyFFMC(k.ffmc);
+      return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${CLASS_HEX[wc]};margin-right:4px;"></span> <b>${k.name}</b> — FWI ${k.fwi??'—'} ${CLASS_EMOJI[wc]} · FFMC ${k.ffmc??'—'}`;
+    }).join('<br>');
+    if(kecs.length>15) html += `<br><span class="text-slate-500">… dan ${kecs.length-15} kecamatan lainnya</span>`;
+    return html;
+  }
 
   let greeted = false;
   toggleBtn.addEventListener('click', ()=>{
