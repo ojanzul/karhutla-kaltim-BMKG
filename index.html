@@ -327,11 +327,6 @@ function panduanUmum(fwiCls, ffmcCls, nama){
   return `<span class="text-blue-400 font-bold">ℹ️ MONITORING:</span> Kondisi cuaca di ${nama} relatif kurang mendukung penyebaran api saat ini. Tetap pantau perkembangan, karena nilai FFMC/FWI bisa berubah cepat mengikuti cuaca.`;
 }
 
-// Memetakan nilai ke posisi (0-100%) di bar gauge yang dibagi 4 SEGMEN SAMA
-// LEBAR (Rendah/Sedang/Tinggi/Ekstrim @ 25% masing-masing), supaya bar selalu
-// terlihat rapi & seimbang meskipun rentang nilai asli tiap kelas jauh
-// berbeda (mis. FFMC: Rendah 0-76 tapi Ekstrim cuma >=89). Nilai tetap
-// diposisikan proporsional DI DALAM segmen kelasnya masing-masing.
 function gaugePct(value, thresholds){
   const v = Math.max(0, Number(value) || 0);
   const bounds = [0, thresholds[0], thresholds[1], thresholds[2], thresholds[2] * 1.6];
@@ -448,7 +443,7 @@ function renderKecamatanCell(r){
   if(!kec || kec.length===0){
     return `<span class="text-slate-500 italic">belum ada rincian</span>`;
   }
-  const worst = kec[0]; // sudah diurutkan terparah dulu dari backend
+  const worst = kec[0];
   const wc = classifyFWI(worst.fwi);
   return `
     <button onclick="event.stopPropagation(); openDetail('${r.name.replace(/'/g,"\\'")}')"
@@ -552,560 +547,653 @@ async function fetchData(silent){
 }
 
 document.getElementById('refreshBtn').addEventListener('click', ()=> fetchData(false));
-
 fetchData(true);
 </script>
 
 <!-- ============================================================= -->
-<!-- CHATBOT WIDGET -- jawab pertanyaan soal data FFMC/FWI dari      -->
-<!-- payload yang sudah dimuat di atas. Murni cek kata kunci, tidak  -->
-<!-- ada API/AI eksternal, jadi gratis & tidak butuh koneksi lain.   -->
+<!-- PANEL NAVIGASI INTERAKTIF (menggantikan chatbot teks bebas)     -->
 <!-- ============================================================= -->
 <button id="chatToggleBtn"
   class="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 shadow-xl flex items-center justify-center text-2xl transition-transform hover:scale-105"
-  title="Tanya soal data karhutla">💬</button>
+  title="Navigasi data karhutla">💬</button>
 
-<div id="chatPanel" class="fixed bottom-24 right-5 z-40 w-[340px] max-w-[92vw] h-[460px] bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl flex-col overflow-hidden hidden">
-  <div class="bg-slate-900 px-4 py-3 flex items-center justify-between border-b border-slate-700">
+<div id="chatPanel" class="fixed bottom-24 right-5 z-40 w-[380px] max-w-[92vw] h-[520px] bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl flex-col overflow-hidden hidden">
+  <div class="bg-slate-900 px-4 py-3 flex items-center justify-between border-b border-slate-700 shrink-0">
     <div>
-      <div class="text-sm font-bold">Asisten Data Karhutla</div>
-      <div class="text-[11px] text-slate-400">Tanya FFMC/FWI per kabupaten &amp; kecamatan</div>
+      <div class="text-sm font-bold">Navigasi Data Karhutla</div>
+      <div class="text-[11px] text-slate-400">Pilih menu di bawah untuk menjelajahi data</div>
     </div>
     <button id="chatCloseBtn" class="text-slate-400 hover:text-white text-lg leading-none">✕</button>
   </div>
   <div id="chatLog" class="flex-1 overflow-y-auto px-3 py-3 space-y-2 text-sm"></div>
-  <form id="chatForm" class="border-t border-slate-700 p-2 flex gap-2">
-    <input id="chatInput" type="text" autocomplete="off" placeholder="mis. FWI Samarinda hari ini?"
-      class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500">
-    <button type="submit" class="bg-red-600 hover:bg-red-500 rounded-lg px-3 text-sm font-semibold">Kirim</button>
-  </form>
 </div>
 
 <script>
 (function(){
-  // --- alias nama kabupaten/kota supaya bisa dikenali dari berbagai cara ketik ---
-  const KAB_ALIASES = [
-    { kab:'Kota Samarinda',           words:['samarinda'] },
-    { kab:'Kota Balikpapan',          words:['balikpapan'] },
-    { kab:'Kota Bontang',             words:['bontang'] },
-    { kab:'Kab. Kutai Kartanegara',   words:['kutai kartanegara','kukar'] },
-    { kab:'Kab. Kutai Timur',         words:['kutai timur','kutim'] },
-    { kab:'Kab. Kutai Barat',         words:['kutai barat','kubar'] },
-    { kab:'Kab. Penajam Paser Utara', words:['penajam paser utara','ppu','penajam'] },
-    { kab:'Kab. Paser',               words:['paser'] },
-    { kab:'Kab. Berau',               words:['berau'] },
-    { kab:'Kab. Mahakam Ulu',         words:['mahakam ulu','mahulu'] },
+
+  /* ========== KONSTANTA & HELPER ========== */
+
+  const REGIONS = [
+    {name:'Kota Samarinda',         short:'Samarinda'},
+    {name:'Kota Balikpapan',        short:'Balikpapan'},
+    {name:'Kota Bontang',           short:'Bontang'},
+    {name:'Kab. Kutai Kartanegara', short:'Kutai Kartanegara'},
+    {name:'Kab. Kutai Timur',       short:'Kutai Timur'},
+    {name:'Kab. Kutai Barat',       short:'Kutai Barat'},
+    {name:'Kab. Paser',             short:'Paser'},
+    {name:'Kab. Penajam Paser Utara',short:'PPU'},
+    {name:'Kab. Berau',             short:'Berau'},
+    {name:'Kab. Mahakam Ulu',       short:'Mahakam Ulu'},
   ];
 
-  const CLASS_EMOJI = { rendah:'🟢', sedang:'🟡', tinggi:'🟠', ekstrim:'🔴', nodata:'⚪' };
+  const EMOJI = {rendah:'🟢',sedang:'🟡',tinggi:'🟠',ekstrim:'🔴',nodata:'⚪'};
+  const STYLES = {
+    btn:    'w-full text-left bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 transition flex items-center justify-between group',
+    btnSm:  'text-left bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-[13px] text-slate-300 transition flex items-center justify-between',
+    btnBlue:'text-left bg-blue-900/40 hover:bg-blue-800/50 border border-blue-700/40 rounded-lg px-3 py-2 text-[13px] text-blue-300 transition',
+    btnBack:'text-left bg-slate-900/50 hover:bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-400 transition',
+    info:   'bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-3 text-sm text-slate-200',
+    badge:  (cls)=> CLASS_BADGE[cls]+' font-semibold px-2 py-0.5 rounded text-xs border',
+    arrow:  '<span class="text-slate-500 group-hover:text-slate-300 transition">›</span>',
+  };
 
-  function norm(s){ return (s||'').toLowerCase().normalize('NFKD').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim(); }
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-  function lower1(s){ return s.charAt(0).toLowerCase() + s.slice(1); }
-
-  // ---------------------------------------------------------------------
-  // Toleransi typo (Levenshtein distance) -- dipakai HANYA sebagai fallback
-  // kalau pencocokan persis gagal, supaya "smarinda" / "balikpapn" tetap
-  // dikenali tanpa bikin salah tangkap kata pendek yang lain.
-  // ---------------------------------------------------------------------
-  function levenshtein(a, b){
-    const m = a.length, n = b.length;
-    if(m===0) return n;
-    if(n===0) return m;
-    const dp = Array.from({length:m+1}, ()=> new Array(n+1).fill(0));
-    for(let i=0;i<=m;i++) dp[i][0]=i;
-    for(let j=0;j<=n;j++) dp[0][j]=j;
-    for(let i=1;i<=m;i++){
-      for(let j=1;j<=n;j++){
-        dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
-      }
-    }
-    return dp[m][n];
+  function fmtV(v){ return v==null ? '—' : v; }
+  function getDay(offset){
+    return payload.days.find(d=>d.offset===offset) || payload.days[0];
+  }
+  function dayLabel(offset){
+    return DAY_NAMES[offset] || ('H+'+offset);
+  }
+  function shortDay(d){
+    return dayLabel(d.offset)+' ('+fmtDate(d.date)+')';
   }
 
-  function exactFindAllKabAliases(qNorm){
-    let hits = [];
-    KAB_ALIASES.forEach(entry=>{
-      entry.words.forEach(w=>{
-        const pos = qNorm.indexOf(w);
-        if(pos>-1) hits.push({kab:entry.kab, pos, len:w.length});
-      });
+  /* ========== RENDER UTILITAS ========== */
+
+  function el(id){ return document.getElementById(id); }
+
+  function addMsg(html){
+    const log = el('chatLog');
+    if(!log) return;
+    const div = document.createElement('div');
+    div.className = 'rounded-xl px-3 py-2.5 text-sm';
+    div.innerHTML = html;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function addBack(label, action){
+    const log = el('chatLog');
+    if(!log) return;
+    const btn = document.createElement('button');
+    btn.className = 'text-left bg-slate-900/50 hover:bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-400 transition mt-1';
+    btn.innerHTML = '← ' + label;
+    btn.onclick = action;
+    const wrap = document.createElement('div');
+    wrap.appendChild(btn);
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function addButtons(items){
+    const log = el('chatLog');
+    if(!log) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'space-y-1.5';
+    items.forEach(it=>{
+      const btn = document.createElement('button');
+      btn.className = it.style || STYLES.btn;
+      btn.innerHTML = it.html || (it.label + (it.showArrow!==false ? STYLES.arrow : ''));
+      btn.onclick = it.action;
+      wrap.appendChild(btn);
     });
-    const byKab = {};
-    hits.forEach(h=>{ if(!byKab[h.kab] || h.len>byKab[h.kab].len) byKab[h.kab]=h; });
-    return Object.values(byKab).sort((a,b)=>a.pos-b.pos).map(h=>h.kab);
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
   }
 
-  function fuzzyFindKabAlias(qNorm){
-    const tokens = qNorm.split(' ').filter(t=>t.length>=4);
-    let best=null, bestDist=Infinity;
-    KAB_ALIASES.forEach(entry=>{
-      entry.words.forEach(w=>{
-        if(w.length<5) return; // kata pendek (ppu dll) terlalu berisiko utk fuzzy
-        tokens.forEach(t=>{
-          if(Math.abs(t.length-w.length)>2) return;
-          const d = levenshtein(t,w);
-          const maxDist = w.length<=7 ? 1 : 2;
-          if(d<=maxDist && d<bestDist){ bestDist=d; best=entry.kab; }
-        });
-      });
-    });
-    return best;
-  }
+  /* ========== NAVIGASI UTAMA ========== */
 
-  function findAllKabAliases(qNorm){
-    const exact = exactFindAllKabAliases(qNorm);
-    if(exact.length) return exact;
-    const fz = fuzzyFindKabAlias(qNorm);
-    return fz ? [fz] : [];
-  }
+  function mainMenu(){
+    const log = el('chatLog');
+    if(!log) return;
+    log.innerHTML = '';
+    addMsg('<div class="text-base font-bold text-white mb-1">🔍 Selamat datang!</div><div class="text-xs text-slate-400">Pilih topik di bawah untuk menjelajahi data kebakaran hutan &amp; lahan Kalimantan Timur.</div>');
 
-  function findKabAlias(qNorm){
-    const exact = exactFindAllKabAliases(qNorm);
-    if(exact.length){
-      let best=null, bestLen=0;
-      KAB_ALIASES.forEach(entry=>{
-        entry.words.forEach(w=>{
-          if(qNorm.includes(w) && w.length>bestLen){ best=entry.kab; bestLen=w.length; }
-        });
-      });
-      return best;
-    }
-    return fuzzyFindKabAlias(qNorm);
-  }
-
-  function findKecamatan(qNorm, day){
-    let best = null, bestKab = null, bestLen = 0;
-    day.regions.forEach(r=>{
-      (r.kecamatan||[]).forEach(k=>{
-        const kn = norm(k.name);
-        if(kn.length >= 3 && qNorm.includes(kn) && kn.length > bestLen){
-          best = k; bestKab = r.name; bestLen = kn.length;
-        }
-      });
-    });
-    return best ? {kec:best, kab:bestKab} : null;
-  }
-
-  function detectDayOffset(qNorm){
-    if(qNorm.includes('lusa')) return 2;
-    if(qNorm.includes('besok')) return 1;
-    return 0;
-  }
-  function detectMetric(qNorm){
-    const wantFfmc = qNorm.includes('ffmc');
-    const wantFwi = qNorm.includes('fwi') || qNorm.includes('fire weather');
-    if(wantFfmc && !wantFwi) return 'ffmc';
-    if(wantFwi && !wantFfmc) return 'fwi';
-    return 'both';
-  }
-  function fmtVal(v){ return v==null ? 'belum ada data' : v; }
-
-  function describeRegion(r, dayLabel, metric){
-    const fcls = classifyFFMC(r.ffmc), wcls = classifyFWI(r.fwi);
-    const dl = lower1(dayLabel);
-    if(metric==='fwi'){
-      if(r.fwi==null) return `Untuk <b>${r.name}</b> ${dl}, datanya belum tersedia 🤷`;
-      return pick([
-        `${CLASS_EMOJI[wcls]} FWI <b>${r.name}</b> ${dl} ada di <b>${r.fwi}</b>, masuk kategori <b>${CLASS_LABEL[wcls]}</b>.`,
-        `${dayLabel}, Fire Weather Index untuk <b>${r.name}</b> tercatat <b>${r.fwi}</b> ${CLASS_EMOJI[wcls]} (${CLASS_LABEL[wcls]}).`,
-      ]);
-    }
-    if(metric==='ffmc'){
-      if(r.ffmc==null) return `Untuk <b>${r.name}</b> ${dl}, datanya belum tersedia 🤷`;
-      return pick([
-        `${CLASS_EMOJI[fcls]} FFMC <b>${r.name}</b> ${dl} ada di <b>${r.ffmc}</b>, kategori <b>${CLASS_LABEL[fcls]}</b>.`,
-        `${dayLabel}, kekeringan permukaan lahan (FFMC) di <b>${r.name}</b> tercatat <b>${r.ffmc}</b> ${CLASS_EMOJI[fcls]} (${CLASS_LABEL[fcls]}).`,
-      ]);
-    }
-    if(r.ffmc==null && r.fwi==null) return `Untuk <b>${r.name}</b> ${dl}, datanya belum tersedia 🤷`;
-    return pick([
-      `${CLASS_EMOJI[wcls]} <b>${r.name}</b> ${dl}: FWI <b>${fmtVal(r.fwi)}</b> (${r.fwi!=null?CLASS_LABEL[wcls]:'-'}), FFMC <b>${fmtVal(r.ffmc)}</b> (${r.ffmc!=null?CLASS_LABEL[fcls]:'-'}).`,
-      `Kondisi <b>${r.name}</b> ${dl} — FWI <b>${fmtVal(r.fwi)}</b> ${CLASS_EMOJI[wcls]} · FFMC <b>${fmtVal(r.ffmc)}</b> ${CLASS_EMOJI[fcls]}.`,
-      `${dayLabel} di <b>${r.name}</b>, status <b>${CLASS_LABEL[wcls]}</b> (FWI ${fmtVal(r.fwi)}) dengan FFMC ${fmtVal(r.ffmc)}.`,
+    addButtons([
+      { label:'<i class="fa-solid fa-location-dot text-red-400 w-5"></i> Data per wilayah',
+        action:()=> regionMenu() },
+      { label:'<i class="fa-solid fa-ranking-star text-amber-400 w-5"></i> Peringkat wilayah',
+        action:()=> rankingMenu() },
+      { label:'<i class="fa-solid fa-chart-line text-emerald-400 w-5"></i> Tren per wilayah',
+        action:()=> trendMenu() },
+      { label:'<i class="fa-solid fa-scale-balanced text-blue-400 w-5"></i> Perbandingan antar wilayah',
+        action:()=> compareMenu() },
+      { label:'<i class="fa-solid fa-map text-purple-400 w-5"></i> Ringkasan provinsi',
+        action:()=> provinceSummaryMenu() },
+      { label:'<i class="fa-solid fa-triangle-exclamation text-orange-400 w-5"></i> Wilayah per status',
+        action:()=> statusFilterMenu() },
+      { label:'<i class="fa-solid fa-calendar-days text-cyan-400 w-5"></i> Data multi-hari',
+        action:()=> multiDayMenu() },
+      { label:'<i class="fa-solid fa-lightbulb text-yellow-400 w-5"></i> Rekomendasi tindakan',
+        action:()=> recommendMenu() },
+      { label:'<i class="fa-solid fa-circle-question text-slate-400 w-5"></i> Apa itu FFMC &amp; FWI?',
+        action:()=> explainMenu() },
     ]);
   }
 
-  function describeKecamatan(k, kabName, dayLabel, metric){
-    const fcls = classifyFFMC(k.ffmc), wcls = classifyFWI(k.fwi);
-    const dl = lower1(dayLabel);
-    if(metric==='fwi'){
-      if(k.fwi==null) return `FWI untuk <b>${k.name}</b> (${kabName}) ${dl} belum ada datanya 🤷`;
-      return `${CLASS_EMOJI[wcls]} FWI <b>${k.name}</b> (${kabName}) ${dl}: <b>${k.fwi}</b> — ${CLASS_LABEL[wcls]}.`;
-    }
-    if(metric==='ffmc'){
-      if(k.ffmc==null) return `FFMC untuk <b>${k.name}</b> (${kabName}) ${dl} belum ada datanya 🤷`;
-      return `${CLASS_EMOJI[fcls]} FFMC <b>${k.name}</b> (${kabName}) ${dl}: <b>${k.ffmc}</b> — ${CLASS_LABEL[fcls]}.`;
-    }
-    if(k.ffmc==null && k.fwi==null) return `Data <b>${k.name}</b> (${kabName}) ${dl} belum tersedia 🤷`;
-    return `${CLASS_EMOJI[wcls]} <b>${k.name}</b> di ${kabName}, ${dl}: FWI <b>${fmtVal(k.fwi)}</b> (${k.fwi!=null?CLASS_LABEL[wcls]:'-'}), FFMC <b>${fmtVal(k.ffmc)}</b> (${k.ffmc!=null?CLASS_LABEL[fcls]:'-'}).`;
+  /* ========== 1. DATA PER WILAYAH ========== */
+
+  function regionMenu(){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-location-dot text-red-400 mr-1"></i> Pilih kabupaten/kota</div>');
+
+    const items = REGIONS.map(r=>({
+      label: '<i class="fa-solid fa-caret-right text-slate-500 w-4 mr-1"></i>' + r.short,
+      action: ()=> dayPickerForRegion(r.name),
+    }));
+    items.push({ label:'← Kembali', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() });
+    addButtons(items);
   }
 
-  function provinceSummary(day, dayLabel){
+  function dayPickerForRegion(regionName){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-1"><i class="fa-solid fa-location-dot text-red-400 mr-1"></i> '+regionName+'</div><div class="text-xs text-slate-400 mb-2">Pilih hari untuk melihat data:</div>');
+
+    const items = payload.days.map(d=>({
+      label: '<i class="fa-regular fa-calendar text-blue-400 w-4 mr-2"></i>' + shortDay(d),
+      action: ()=> showRegionData(regionName, d.offset, 'both'),
+    }));
+    items.push({ label:'← Pilih wilayah lain', style:STYLES.btnBack, showArrow:false, action:()=>regionMenu() });
+    items.push({ label:'🏠 Menu utama', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() });
+    addButtons(items);
+  }
+
+  function showRegionData(regionName, offset, metric){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    const day = getDay(offset);
+    const r = day.regions.find(x=>x.name===regionName);
+    if(!r){
+      addMsg('<div class="'+STYLES.info+'">Data <b>'+regionName+'</b> untuk '+dayLabel(offset).toLowerCase()+' tidak tersedia.</div>');
+      return;
+    }
+
+    const dl = shortDay(day);
+    const fc = classifyFFMC(r.ffmc), wc = classifyFWI(r.fwi);
+
+    let header = '<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-location-dot text-red-400 mr-1"></i> '+regionName+' · '+dl+'</div>';
+    addMsg(header);
+
+    let info = '<div class="bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 space-y-2">';
+    if(metric==='both'||metric==='ffmc')
+      info += '<div class="flex justify-between items-center"><span class="text-xs text-slate-400 uppercase font-bold">FFMC</span><span class="'+STYLES.badge(fc)+'">'+fmtV(r.ffmc)+' · '+CLASS_LABEL[fc]+'</span></div>';
+    if(metric==='both'||metric==='fwi')
+      info += '<div class="flex justify-between items-center"><span class="text-xs text-slate-400 uppercase font-bold">FWI</span><span class="'+STYLES.badge(wc)+'">'+fmtV(r.fwi)+' · '+CLASS_LABEL[wc]+'</span></div>';
+    info += '</div>';
+    addMsg(info);
+
+    // Kecamatan
+    if(r.kecamatan && r.kecamatan.length>0){
+      addMsg('<div class="text-xs text-slate-400 font-bold uppercase mt-3 mb-1">Rincian kecamatan ('+r.kecamatan.length+')</div>');
+      let kTable = '<div class="bg-slate-900/50 border border-slate-700 rounded-xl overflow-hidden"><table class="w-full text-xs"><thead><tr class="text-slate-500 text-[10px] uppercase border-b border-slate-700"><th class="text-left py-1.5 px-3">Kecamatan</th><th class="py-1.5 px-2 text-center">FFMC</th><th class="py-1.5 px-2 text-center">FWI</th><th class="py-1.5 px-2 text-center">Status</th></tr></thead><tbody>';
+      r.kecamatan.forEach(k=>{
+        const kfc=classifyFFMC(k.ffmc), kwc=classifyFWI(k.fwi);
+        kTable += '<tr class="border-b border-slate-700/50"><td class="py-2 px-3 text-slate-200">'+k.name+'</td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(kfc)+'">'+fmtV(k.ffmc)+'</span></td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(kwc)+'">'+fmtV(k.fwi)+'</span></td><td class="py-2 px-2 text-center text-[10px]">'+EMOJI[kwc]+' '+CLASS_LABEL[kwc]+'</td></tr>';
+      });
+      kTable += '</tbody></table></div>';
+      addMsg(kTable);
+    } else {
+      addMsg('<div class="text-xs text-slate-500 italic mt-2">Rincian kecamatan belum tersedia untuk wilayah ini.</div>');
+    }
+
+    // Tombol aksi lanjutan
+    addButtons([
+      { label:'<i class="fa-solid fa-calendar-days text-cyan-400 w-4"></i> Lihat hari lain',
+        action:()=> dayPickerForRegion(regionName) },
+      { label:'<i class="fa-solid fa-lightbulb text-yellow-400 w-4"></i> Rekomendasi tindakan',
+        action:()=> showRecommendation(regionName, offset) },
+    ]);
+
+    addBack('Pilih wilayah lain', ()=>regionMenu());
+    addBack('Menu utama', ()=>mainMenu());
+  }
+
+  /* ========== 2. PERINGKAT WILAYAH ========== */
+
+  function rankingMenu(){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-ranking-star text-amber-400 mr-1"></i> Peringkat wilayah</div>');
+    addButtons([
+      { label:'<i class="fa-solid fa-arrow-down-wide-short text-red-400 w-4"></i> Paling berisiko → paling aman',
+        action:()=> dayPickerRanking('desc') },
+      { label:'<i class="fa-solid fa-arrow-up-wide-short text-blue-400 w-4"></i> Paling aman → paling berisiko',
+        action:()=> dayPickerRanking('asc') },
+      { label:'← Kembali', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() },
+    ]);
+  }
+
+  function dayPickerRanking(order){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-xs text-slate-400 mb-2">Pilih hari:</div>');
+    const items = payload.days.map(d=>({
+      label:'<i class="fa-regular fa-calendar text-blue-400 w-4 mr-2"></i>'+shortDay(d),
+      action:()=> showRanking(d.offset, order),
+    }));
+    items.push({ label:'← Kembali', style:STYLES.btnBack, showArrow:false, action:()=>rankingMenu() });
+    items.push({ label:'🏠 Menu utama', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() });
+    addButtons(items);
+  }
+
+  function showRanking(offset, order){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    const day = getDay(offset);
+    const dl = shortDay(day);
+    const sorted = [...day.regions].filter(r=>r.fwi!=null).sort((a,b)=> order==='desc' ? b.fwi-a.fwi : a.fwi-b.fwi);
+
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-ranking-star text-amber-400 mr-1"></i> Peringkat FWI · '+dl+'</div>');
+
+    let html = '<div class="bg-slate-900/50 border border-slate-700 rounded-xl overflow-hidden"><table class="w-full text-xs"><thead><tr class="text-slate-500 text-[10px] uppercase border-b border-slate-700"><th class="text-left py-2 px-3">#</th><th class="text-left py-2 px-2">Wilayah</th><th class="py-2 px-2 text-center">FWI</th><th class="py-2 px-2 text-center">FFMC</th><th class="py-2 px-2 text-center">Status</th></tr></thead><tbody>';
+    sorted.forEach((r,i)=>{
+      const wc=classifyFWI(r.fwi), fc=classifyFFMC(r.ffmc);
+      const rank = i+1;
+      const medal = rank===1?'<span class="text-amber-400 font-bold">🥇</span> ':rank===2?'<span class="text-slate-300 font-bold">🥈</span> ':rank===3?'<span class="text-amber-600 font-bold">🥉</span> ':(rank+'. ');
+      html += '<tr class="border-b border-slate-700/50 hover:bg-slate-800/30"><td class="py-2 px-3 text-slate-400">'+medal+'</td><td class="py-2 px-2 text-slate-200 font-medium">'+r.name+'</td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(wc)+'">'+r.fwi+'</span></td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(fc)+'">'+r.ffmc+'</span></td><td class="py-2 px-2 text-center text-[10px]">'+EMOJI[wc]+' '+CLASS_LABEL[wc]+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    addMsg(html);
+
+    addBack('Ganti hari', ()=>dayPickerRanking(order));
+    addBack('Menu utama', ()=>mainMenu());
+  }
+
+  /* ========== 3. TREN PER WILAYAH ========== */
+
+  function trendMenu(){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-chart-line text-emerald-400 mr-1"></i> Tren per wilayah</div><div class="text-xs text-slate-400 mb-2">Pilih wilayah untuk melihat tren FWI dari hari ke hari:</div>');
+    const items = REGIONS.map(r=>({
+      label:'<i class="fa-solid fa-caret-right text-slate-500 w-4 mr-1"></i>'+r.short,
+      action:()=> showTrend(r.name),
+    }));
+    items.push({ label:'← Kembali', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() });
+    addButtons(items);
+  }
+
+  function showTrend(regionName){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-chart-line text-emerald-400 mr-1"></i> Tren '+regionName+'</div>');
+
+    let html = '<div class="bg-slate-900/50 border border-slate-700 rounded-xl overflow-hidden"><table class="w-full text-xs"><thead><tr class="text-slate-500 text-[10px] uppercase border-b border-slate-700"><th class="text-left py-2 px-3">Hari</th><th class="py-2 px-2 text-center">FFMC</th><th class="py-2 px-2 text-center">FWI</th><th class="py-2 px-2 text-center">Status</th><th class="py-2 px-2 text-center">Tren</th></tr></thead><tbody>';
+    payload.days.forEach((day,i)=>{
+      const r = day.regions.find(x=>x.name===regionName);
+      if(!r) return;
+      const fc=classifyFFMC(r.ffmc), wc=classifyFWI(r.fwi);
+      const nextDay = payload.days[i+1];
+      let trenLabel='—', trenIcon='fa-minus', trenColor='text-slate-500';
+      if(nextDay){
+        const nr = nextDay.regions.find(x=>x.name===regionName);
+        if(nr && r.fwi!=null && nr.fwi!=null){
+          const diff=nr.fwi-r.fwi;
+          if(diff>0.5){trenLabel='Naik';trenIcon='fa-arrow-trend-up';trenColor='text-red-400';}
+          else if(diff<-0.5){trenLabel='Turun';trenIcon='fa-arrow-trend-down';trenColor='text-emerald-400';}
+          else{trenLabel='Stabil';trenIcon='fa-arrows-h';trenColor='text-amber-400';}
+        }
+      }
+      html += '<tr class="border-b border-slate-700/50"><td class="py-2 px-3 text-slate-200 font-medium">'+shortDay(day)+'</td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(fc)+'">'+fmtV(r.ffmc)+'</span></td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(wc)+'">'+fmtV(r.fwi)+'</span></td><td class="py-2 px-2 text-center text-[10px]">'+EMOJI[wc]+' '+CLASS_LABEL[wc]+'</td><td class="py-2 px-2 text-center '+trenColor+' text-[10px] font-semibold"><i class="fa-solid '+trenIcon+' mr-1"></i>'+trenLabel+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    addMsg(html);
+
+    addBack('Pilih wilayah lain', ()=>trendMenu());
+    addBack('Menu utama', ()=>mainMenu());
+  }
+
+  /* ========== 4. PERBANDINGAN ========== */
+
+  function compareMenu(){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-1"><i class="fa-solid fa-scale-balanced text-blue-400 mr-1"></i> Perbandingan</div><div class="text-xs text-slate-400 mb-2">Pilih hari, lalu pilih 2 wilayah untuk dibandingkan:</div>');
+    addButtons(
+      payload.days.map(d=>({
+        label:'<i class="fa-regular fa-calendar text-blue-400 w-4 mr-2"></i>'+shortDay(d),
+        action:()=> comparePickFirst(d.offset),
+      })).concat([
+        { label:'← Kembali', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() },
+      ])
+    );
+  }
+
+  function comparePickFirst(offset){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-xs text-slate-400 mb-2">Pilih wilayah <b>pertama</b>:</div>');
+    const items = REGIONS.map(r=>({
+      label:'<i class="fa-solid fa-caret-right text-slate-500 w-4 mr-1"></i>'+r.short,
+      action:()=> comparePickSecond(offset, r.name),
+    }));
+    items.push({ label:'← Ganti hari', style:STYLES.btnBack, showArrow:false, action:()=>compareMenu() });
+    items.push({ label:'🏠 Menu utama', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() });
+    addButtons(items);
+  }
+
+  function comparePickSecond(offset, first){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-xs text-slate-400 mb-2">Dipilih: <b>'+first+'</b>. Pilih wilayah <b>kedua</b>:</div>');
+    const items = REGIONS.filter(r=>r.name!==first).map(r=>({
+      label:'<i class="fa-solid fa-caret-right text-slate-500 w-4 mr-1"></i>'+r.short,
+      action:()=> showComparison(offset, first, r.name),
+    }));
+    items.push({ label:'← Ganti wilayah pertama', style:STYLES.btnBack, showArrow:false, action:()=>comparePickFirst(offset) });
+    items.push({ label:'🏠 Menu utama', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() });
+    addButtons(items);
+  }
+
+  function showComparison(offset, name1, name2){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    const day = getDay(offset);
+    const dl = shortDay(day);
+    const r1 = day.regions.find(x=>x.name===name1);
+    const r2 = day.regions.find(x=>x.name===name2);
+
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-scale-balanced text-blue-400 mr-1"></i> Perbandingan · '+dl+'</div>');
+
+    if(!r1||!r2){
+      addMsg('<div class="'+STYLES.info+'">Data salah satu wilayah tidak tersedia.</div>');
+      return;
+    }
+
+    let html = '<div class="bg-slate-900/50 border border-slate-700 rounded-xl overflow-hidden"><table class="w-full text-xs"><thead><tr class="text-slate-500 text-[10px] uppercase border-b border-slate-700"><th class="text-left py-2 px-3">Wilayah</th><th class="py-2 px-2 text-center">FFMC</th><th class="py-2 px-2 text-center">FFMC Status</th><th class="py-2 px-2 text-center">FWI</th><th class="py-2 px-2 text-center">FWI Status</th></tr></thead><tbody>';
+    [r1,r2].forEach(r=>{
+      const fc=classifyFFMC(r.ffmc),wc=classifyFWI(r.fwi);
+      html += '<tr class="border-b border-slate-700/50"><td class="py-2 px-3 text-slate-200 font-medium">'+r.name+'</td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(fc)+'">'+fmtV(r.ffmc)+'</span></td><td class="py-2 px-2 text-center text-[10px]">'+EMOJI[fc]+' '+CLASS_LABEL[fc]+'</td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(wc)+'">'+fmtV(r.fwi)+'</span></td><td class="py-2 px-2 text-center text-[10px]">'+EMOJI[wc]+' '+CLASS_LABEL[wc]+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    addMsg(html);
+
+    // Kesimpulan
+    if(r1.fwi!=null && r2.fwi!=null){
+      const hi = r1.fwi>=r2.fwi ? r1 : r2;
+      const lo = r1.fwi>=r2.fwi ? r2 : r1;
+      if(r1.fwi!==r2.fwi){
+        addMsg('<div class="bg-blue-900/30 border border-blue-700/40 rounded-lg px-3 py-2 text-xs text-blue-300">👉 <b>'+hi.name+'</b> memiliki risiko lebih tinggi (FWI '+hi.fwi+') dibanding <b>'+lo.name+'</b> (FWI '+lo.fwi+').</div>');
+      } else {
+        addMsg('<div class="bg-blue-900/30 border border-blue-700/40 rounded-lg px-3 py-2 text-xs text-blue-300">👉 Keduanya memiliki FWI yang sama ('+r1.fwi+').</div>');
+      }
+    }
+
+    addBack('Bandingkan lagi', ()=>compareMenu());
+    addBack('Menu utama', ()=>mainMenu());
+  }
+
+  /* ========== 5. RINGKASAN PROVINSI ========== */
+
+  function provinceSummaryMenu(){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-map text-purple-400 mr-1"></i> Ringkasan provinsi</div><div class="text-xs text-slate-400 mb-2">Pilih hari:</div>');
+    addButtons(
+      payload.days.map(d=>({
+        label:'<i class="fa-regular fa-calendar text-blue-400 w-4 mr-2"></i>'+shortDay(d),
+        action:()=> showProvinceSummary(d.offset),
+      })).concat([
+        { label:'← Kembali', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() },
+      ])
+    );
+  }
+
+  function showProvinceSummary(offset){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    const day = getDay(offset);
+    const dl = shortDay(day);
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-map text-purple-400 mr-1"></i> Ringkasan Kaltim · '+dl+'</div>');
+
     const fwiVals = day.regions.map(r=>r.fwi).filter(v=>v!=null);
     const ffmcVals = day.regions.map(r=>r.ffmc).filter(v=>v!=null);
-    if(fwiVals.length===0) return `Belum ada data yang cukup untuk meringkas kondisi Kaltim ${lower1(dayLabel)}.`;
-    const avgFwi = Math.round((fwiVals.reduce((a,b)=>a+b,0)/fwiVals.length)*10)/10;
+    const avgFwi = fwiVals.length ? Math.round((fwiVals.reduce((a,b)=>a+b,0)/fwiVals.length)*10)/10 : null;
     const avgFfmc = ffmcVals.length ? Math.round((ffmcVals.reduce((a,b)=>a+b,0)/ffmcVals.length)*10)/10 : null;
-    const wcls = classifyFWI(avgFwi);
+    const wcls = classifyFWI(avgFwi), fcls = classifyFFMC(avgFfmc);
     const top = [...day.regions].filter(r=>r.fwi!=null).sort((a,b)=>b.fwi-a.fwi)[0];
-    let msg = `${CLASS_EMOJI[wcls]} Secara rata-rata, kondisi Kaltim ${lower1(dayLabel)} ada di level <b>${CLASS_LABEL[wcls]}</b> (FWI rata-rata ${avgFwi}${avgFfmc!=null ? ', FFMC rata-rata '+avgFfmc : ''}).`;
-    if(top) msg += ` Wilayah yang perlu diperhatikan: <b>${top.name}</b> (FWI ${top.fwi}).`;
-    return msg;
-  }
+    const safest = [...day.regions].filter(r=>r.fwi!=null).sort((a,b)=>a.fwi-b.fwi)[0];
 
-  function trendAnswer(name, isKec, kabName, day, dayLabel){
-    const idx = payload.days.findIndex(d=>d.offset===day.offset);
-    const nextDay = payload.days[idx+1];
-    if(!nextDay) return `Tidak ada data hari berikutnya untuk dibandingkan dengan ${dayLabel}.`;
-    function getVal(d){
-      if(isKec){
-        const r = d.regions.find(x=>x.name===kabName);
-        const k = r ? (r.kecamatan||[]).find(x=>x.name===name) : null;
-        return k ? k.fwi : null;
-      }
-      const r = d.regions.find(x=>x.name===name);
-      return r ? r.fwi : null;
-    }
-    const cur = getVal(day), nxt = getVal(nextDay);
-    if(cur==null || nxt==null) return `Data FWI ${name} belum lengkap untuk membandingkan trennya.`;
-    const diff = Math.round((nxt-cur)*10)/10;
-    const nextLabel = lower1(DAY_NAMES[nextDay.offset] || ('H+'+nextDay.offset));
-    if(diff > 0.5) return `📈 FWI <b>${name}</b> diperkirakan <b>naik</b> dari ${cur} (${lower1(dayLabel)}) jadi ${nxt} (${nextLabel}) — kenaikan ${diff} poin. Perlu lebih waspada.`;
-    if(diff < -0.5) return `📉 FWI <b>${name}</b> diperkirakan <b>turun</b> dari ${cur} (${lower1(dayLabel)}) jadi ${nxt} (${nextLabel}) — turun ${Math.abs(diff)} poin.`;
-    return `➡️ FWI <b>${name}</b> diperkirakan relatif <b>stabil</b>, dari ${cur} (${lower1(dayLabel)}) ke ${nxt} (${nextLabel}).`;
-  }
+    let html = '<div class="bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 space-y-2 text-xs">';
+    html += '<div class="flex justify-between"><span class="text-slate-400 uppercase font-bold">FWI rata-rata</span><span class="'+STYLES.badge(wcls)+'">'+(avgFwi!=null?avgFwi:'—')+' · '+CLASS_LABEL[wcls]+'</span></div>';
+    html += '<div class="flex justify-between"><span class="text-slate-400 uppercase font-bold">FFMC rata-rata</span><span class="'+STYLES.badge(fcls)+'">'+(avgFfmc!=null?avgFfmc:'—')+' · '+CLASS_LABEL[fcls]+'</span></div>';
+    html += '<div class="border-t border-slate-700 my-1"></div>';
+    if(top) html += '<div class="flex justify-between"><span class="text-slate-400">🔥 Risiko tertinggi</span><span class="text-red-400 font-semibold">'+top.name+' (FWI '+top.fwi+')</span></div>';
+    if(safest) html += '<div class="flex justify-between"><span class="text-slate-400">✅ Risiko terendah</span><span class="text-emerald-400 font-semibold">'+safest.name+' (FWI '+safest.fwi+')</span></div>';
+    html += '</div>';
+    addMsg(html);
 
-  function multiDayAnswer(name, isKec, kabName, metric){
-    function getVals(d){
-      if(isKec){
-        const r = d.regions.find(x=>x.name===kabName);
-        const k = r ? (r.kecamatan||[]).find(x=>x.name===name) : null;
-        return k ? {ffmc:k.ffmc, fwi:k.fwi} : {ffmc:null, fwi:null};
-      }
-      const r = d.regions.find(x=>x.name===name);
-      return r ? {ffmc:r.ffmc, fwi:r.fwi} : {ffmc:null, fwi:null};
-    }
-    const lines = payload.days.map(d=>{
-      const v = getVals(d);
-      const lbl = DAY_NAMES[d.offset] || ('H+'+d.offset);
-      if(metric==='ffmc') return `• ${lbl} (${d.date}): FFMC <b>${fmtVal(v.ffmc)}</b>`;
-      if(metric==='fwi') return `• ${lbl} (${d.date}): FWI <b>${fmtVal(v.fwi)}</b>`;
-      return `• ${lbl} (${d.date}): FWI <b>${fmtVal(v.fwi)}</b>, FFMC <b>${fmtVal(v.ffmc)}</b>`;
+    // Hitung per status
+    const counts = {rendah:0,sedang:0,tinggi:0,ekstrim:0};
+    day.regions.forEach(r=>{ const c=classifyFWI(r.fwi); if(counts[c]!==undefined) counts[c]++; });
+    let chtml = '<div class="grid grid-cols-4 gap-2 mt-2">';
+    [['rendah','text-blue-400'],['sedang','text-amber-400'],['tinggi','text-red-400'],['ekstrim','text-purple-400']].forEach(([k,clr])=>{
+      chtml += '<div class="bg-slate-900/50 border border-slate-700 rounded-lg px-2 py-2 text-center"><div class="text-lg font-bold '+clr+'">'+counts[k]+'</div><div class="text-[10px] text-slate-500">'+EMOJI[k]+' '+k.charAt(0).toUpperCase()+k.slice(1)+'</div></div>';
     });
-    return `Perkiraan <b>${name}</b>${kabName?' ('+kabName+')':''} untuk ${payload.days.length} hari ke depan:<br>` + lines.join('<br>');
+    chtml += '</div>';
+    addMsg(chtml);
+
+    addBack('Ganti hari', ()=>provinceSummaryMenu());
+    addBack('Menu utama', ()=>mainMenu());
   }
 
-  // ---------------------------------------------------------------------
-  // MEMORI PERCAKAPAN -- inilah bagian intinya. Chatbot menyimpan wilayah,
-  // hari, dan metrik yang terakhir dibicarakan, supaya pertanyaan lanjutan
-  // yang tidak menyebut ulang nama wilayah tetap nyambung.
-  //   User : "FWI Samarinda hari ini?"
-  //   User : "kalau besok?"          -> otomatis tetap soal Samarinda
-  //   User : "FFMC-nya berapa?"      -> otomatis tetap Samarinda & besok
-  // ---------------------------------------------------------------------
-  let context = {
-    lastKab: null,        // nama kabupaten terakhir dibahas
-    lastKecInfo: null,    // {kec:{...}, kab:'...'} kecamatan terakhir dibahas
-    lastDayOffset: 0,
-    lastMetric: 'both',
-    history: [],          // {q, a}
-  };
+  /* ========== 6. FILTER PER STATUS ========== */
 
-  function rememberKab(kabName){ context.lastKab = kabName; context.lastKecInfo = null; }
-  function rememberKec(kecInfo){ context.lastKecInfo = kecInfo; context.lastKab = kecInfo.kab; }
-  function pushHistory(q, a){
-    context.history.push({q, a});
-    if(context.history.length > 20) context.history.shift();
+  function statusFilterMenu(){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-triangle-exclamation text-orange-400 mr-1"></i> Filter per status FWI</div><div class="text-xs text-slate-400 mb-2">Tampilkan wilayah berdasarkan klasifikasi:</div>');
+    addButtons([
+      { label: EMOJI.ekstrim+' <b class="text-purple-400">EKSTRIM</b> <span class="text-xs text-slate-500">(≥13)</span>', action:()=>dayPickerStatus('ekstrim') },
+      { label: EMOJI.tinggi+' <b class="text-red-400">TINGGI</b> <span class="text-xs text-slate-500">(7–13)</span>', action:()=>dayPickerStatus('tinggi') },
+      { label: EMOJI.sedang+' <b class="text-amber-400">SEDANG</b> <span class="text-xs text-slate-500">(2–7)</span>', action:()=>dayPickerStatus('sedang') },
+      { label: EMOJI.rendah+' <b class="text-blue-400">RENDAH</b> <span class="text-xs text-slate-500">(&lt;2)</span>', action:()=>dayPickerStatus('rendah') },
+      { label:'← Kembali', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() },
+    ]);
   }
 
-  const FOLLOWUP_CUES = /(itu|nya\b|gimana|kalau|terus|lalu|dong|dia|situ|tadi|sekarang)/;
-
-  function answerQuery(rawQuery){
-    const q = norm(rawQuery);
-    if(!q) return 'Coba ketik pertanyaan dulu ya 🙂';
-
-    if(/^(hai|halo|hi|hey|p|tolong|bantuan|help)$/.test(q) || q.length<=3){
-      const ans = 'Halo! 👋 Saya bisa bantu jawab soal FFMC/FWI, dan saya ingat konteks obrolan kita. Contoh:<br>' +
-        '• <i>"FWI Samarinda hari ini?"</i> lalu <i>"kalau besok?"</i><br>' +
-        '• <i>"Kecamatan mana yang paling parah?"</i><br>' +
-        '• <i>"Bandingkan Samarinda dan Balikpapan"</i><br>' +
-        '• <i>"Tren FWI Paser gimana?"</i><br>' +
-        '• <i>"Apa itu FWI?"</i>';
-      return ans;
-    }
-
-    if(/(terima kasih|makasih|thanks|thx)/.test(q)){
-      return pick(['Sama-sama! 🙏 Ada lagi yang mau ditanyakan?', 'Siap, senang bisa bantu! 😊 Ada lagi?']);
-    }
-    if(/(dadah|^bye\b|sampai jumpa|sudah dulu ya|cukup dulu)/.test(q)){
-      return pick(['Sampai jumpa! Tetap waspada karhutla ya 👋', 'Oke, hati-hati selalu 👋']);
-    }
-    if(/(lupakan|reset konteks|mulai dari awal|hapus riwayat)/.test(q)){
-      context = { lastKab:null, lastKecInfo:null, lastDayOffset:0, lastMetric:'both', history:[] };
-      return 'Oke, saya lupakan konteks obrolan sebelumnya. Mulai dari awal ya 🔄';
-    }
-    if(/(riwayat pertanyaan|history|tadi saya tanya apa|pertanyaan sebelumnya)/.test(q)){
-      if(context.history.length===0) return 'Belum ada riwayat pertanyaan di sesi ini.';
-      const recent = context.history.slice(-3);
-      return 'Beberapa pertanyaan terakhir Anda:<br>' + recent.map((h,i)=>`${i+1}. <i>"${h.q}"</i>`).join('<br>');
-    }
-    if(/(apa itu ffmc|ffmc itu apa|definisi ffmc|arti ffmc)/.test(q)){
-      const ans = 'FFMC (Fine Fuel Moisture Code) mengukur tingkat kekeringan bahan bakar ringan di permukaan tanah — dedaunan gugur, ranting kecil, alang-alang. Skala 0–101, makin tinggi makin kering & mudah tersulut.';
-      pushHistory(rawQuery, ans); return ans;
-    }
-    if(/(apa itu fwi|fwi itu apa|definisi fwi|arti fwi)/.test(q)){
-      const ans = 'FWI (Fire Weather Index) menggabungkan kekeringan bahan bakar dengan kondisi cuaca untuk memperkirakan seberapa besar & cepat api bisa membesar kalau kebakaran terjadi. Ini indeks status siaga utama di dashboard.';
-      pushHistory(rawQuery, ans); return ans;
-    }
-
-    if(!payload.days || payload.days.length===0){
-      return 'Data belum berhasil dimuat, coba klik tombol "Perbarui" di atas dulu ya.';
-    }
-
-    const explicitDay = /(hari ini|besok|lusa)/.test(q);
-    const offset = explicitDay ? detectDayOffset(q) : (context.lastDayOffset ?? 0);
-    const day = payload.days.find(d=>d.offset===offset) || payload.days[0];
-    const dayLabel = DAY_NAMES[day.offset] || ('H+' + day.offset);
-
-    const explicitMetric = /(ffmc|fwi|fire weather)/.test(q);
-    const kecMatchNow = findKecamatan(q, day);
-    const kabAliasesNow = findAllKabAliases(q);
-    const hasExplicitEntity = !!kecMatchNow || kabAliasesNow.length>0;
-    // Metrik ikut konteks lama HANYA kalau ini follow-up (tidak ada wilayah baru
-    // disebut). Kalau wilayah baru disebut eksplisit, default ke "both" supaya
-    // tidak nyasar ikut preferensi metrik dari topik sebelumnya yang tidak nyambung.
-    const metric = explicitMetric ? detectMetric(q) : (hasExplicitEntity ? 'both' : (context.lastMetric || 'both'));
-
-    // --- ringkasan provinsi ---
-    if(/(kaltim|kalimantan timur|provinsi)/.test(q) && /(kondisi|gimana|bagaimana|ringkasan|secara umum|status)/.test(q)){
-      const ans = provinceSummary(day, dayLabel);
-      pushHistory(rawQuery, ans);
-      return ans;
-    }
-
-    // --- multi-hari ("3 hari kedepan", dst) ---
-    if(/(3 hari|tiga hari|beberapa hari|minggu ini|seminggu|semua hari|hari hari kedepan|hari kedepan)/.test(q)){
-      let name=null, isKec=false, kabName=null;
-      if(kecMatchNow){ name=kecMatchNow.kec.name; isKec=true; kabName=kecMatchNow.kab; rememberKec(kecMatchNow); }
-      else if(kabAliasesNow.length){ name=kabAliasesNow[0]; rememberKab(name); }
-      else if(context.lastKecInfo){ name=context.lastKecInfo.kec.name; isKec=true; kabName=context.lastKecInfo.kab; }
-      else if(context.lastKab){ name=context.lastKab; }
-      if(!name) return 'Perkiraan beberapa hari ke depan untuk wilayah mana? Sebutkan nama kabupaten/kota atau kecamatannya ya.';
-      const ans = multiDayAnswer(name, isKec, kabName, metric);
-      context.lastMetric = metric;
-      pushHistory(rawQuery, ans);
-      return ans;
-    }
-
-    // --- tren naik/turun ---
-    if(/(tren|trend|naik|turun|meningkat|menurun)/.test(q)){
-      if(kecMatchNow){ rememberKec(kecMatchNow); context.lastDayOffset=offset; context.lastMetric=metric;
-        const ans = trendAnswer(kecMatchNow.kec.name, true, kecMatchNow.kab, day, dayLabel); pushHistory(rawQuery, ans); return ans; }
-      const kabMatch = findKabAlias(q);
-      if(kabMatch){ rememberKab(kabMatch); context.lastDayOffset=offset; context.lastMetric=metric;
-        const ans = trendAnswer(kabMatch, false, null, day, dayLabel); pushHistory(rawQuery, ans); return ans; }
-      if(context.lastKecInfo){
-        const ans = trendAnswer(context.lastKecInfo.kec.name, true, context.lastKecInfo.kab, day, dayLabel);
-        pushHistory(rawQuery, ans); return ans;
-      }
-      if(context.lastKab){
-        const ans = trendAnswer(context.lastKab, false, null, day, dayLabel);
-        pushHistory(rawQuery, ans); return ans;
-      }
-      return 'Tren wilayah mana yang mau dicek? Sebutkan nama kabupaten/kota atau kecamatannya ya.';
-    }
-
-    // --- saran / rekomendasi tindakan ---
-    if(/(saran|rekomendasi|harus apa|tindakan|antisipasi)/.test(q)){
-      if(kecMatchNow){
-        rememberKec(kecMatchNow); context.lastDayOffset=offset; context.lastMetric=metric;
-        const wcls = classifyFWI(kecMatchNow.kec.fwi), fcls = classifyFFMC(kecMatchNow.kec.ffmc);
-        const ans = panduanUmum(wcls, fcls, kecMatchNow.kec.name + ' (' + kecMatchNow.kab + ')');
-        pushHistory(rawQuery, ans); return ans;
-      }
-      const kabMatch = findKabAlias(q);
-      if(kabMatch){
-        const r = day.regions.find(x=>x.name===kabMatch);
-        if(r){
-          rememberKab(kabMatch); context.lastDayOffset=offset; context.lastMetric=metric;
-          const wcls = classifyFWI(r.fwi), fcls = classifyFFMC(r.ffmc);
-          const ans = panduanUmum(wcls, fcls, r.name);
-          pushHistory(rawQuery, ans); return ans;
-        }
-      }
-      // fallback ke konteks kalau tidak sebut nama wilayah lagi
-      if(context.lastKecInfo){
-        const wcls = classifyFWI(context.lastKecInfo.kec.fwi), fcls = classifyFFMC(context.lastKecInfo.kec.ffmc);
-        const ans = panduanUmum(wcls, fcls, context.lastKecInfo.kec.name + ' (' + context.lastKecInfo.kab + ')');
-        pushHistory(rawQuery, ans); return ans;
-      }
-      if(context.lastKab){
-        const r = day.regions.find(x=>x.name===context.lastKab);
-        if(r){
-          const wcls = classifyFWI(r.fwi), fcls = classifyFFMC(r.ffmc);
-          const ans = panduanUmum(wcls, fcls, r.name);
-          pushHistory(rawQuery, ans); return ans;
-        }
-      }
-      return 'Saran untuk wilayah mana? Sebutkan nama kabupaten/kota atau kecamatannya ya, misalnya "saran untuk Paser".';
-    }
-
-    // --- bandingkan 2 daerah ---
-    if(/(bandingkan|dibanding|vs|versus)/.test(q)){
-      const kabs = findAllKabAliases(q);
-      if(kabs.length>=2){
-        const r1 = day.regions.find(x=>x.name===kabs[0]);
-        const r2 = day.regions.find(x=>x.name===kabs[1]);
-        if(r1 && r2){
-          let msg = `Perbandingan ${lower1(dayLabel)}:<br>` + describeRegion(r1, dayLabel, metric) + '<br>' + describeRegion(r2, dayLabel, metric);
-          if(r1.fwi!=null && r2.fwi!=null){
-            const higher = r1.fwi>=r2.fwi ? r1 : r2, lowerR = r1.fwi>=r2.fwi ? r2 : r1;
-            if(r1.fwi!==r2.fwi) msg += `<br><br>👉 <b>${higher.name}</b> lebih berisiko dibanding <b>${lowerR.name}</b> saat ini.`;
-            else msg += `<br><br>👉 Keduanya berstatus sama.`;
-          }
-          context.lastDayOffset=offset; context.lastMetric=metric;
-          pushHistory(rawQuery, msg);
-          return msg;
-        }
-      }
-    }
-
-    // --- pertanyaan "paling parah / tertinggi" ---
-    if(/(paling parah|terparah|tertinggi|paling tinggi|paling bahaya|paling berisiko)/.test(q)){
-      if(q.includes('kecamatan')){
-        let worst = null, worstKab = null;
-        day.regions.forEach(r=>{
-          (r.kecamatan||[]).forEach(k=>{
-            if(k.fwi!=null && (worst===null || k.fwi > worst.fwi)){ worst = k; worstKab = r.name; }
-          });
-        });
-        if(!worst) return `Belum ada data kecamatan dengan FWI untuk ${lower1(dayLabel)}.`;
-        rememberKec({kec:worst, kab:worstKab}); context.lastDayOffset=offset; context.lastMetric=metric;
-        const ans = `Kecamatan paling parah ${lower1(dayLabel)} adalah ` + describeKecamatan(worst, worstKab, dayLabel, metric);
-        pushHistory(rawQuery, ans); return ans;
-      }
-      const sorted = [...day.regions].filter(r=>r.fwi!=null).sort((a,b)=>b.fwi-a.fwi);
-      if(sorted.length===0) return `Belum ada data FWI untuk ${lower1(dayLabel)}.`;
-      rememberKab(sorted[0].name); context.lastDayOffset=offset; context.lastMetric=metric;
-      const ans = `Yang paling parah ${lower1(dayLabel)} adalah ` + describeRegion(sorted[0], dayLabel, metric);
-      pushHistory(rawQuery, ans); return ans;
-    }
-
-    // --- pertanyaan "paling rendah / aman" ---
-    if(/(paling rendah|paling aman|teraman|paling bagus|paling minim)/.test(q)){
-      const sorted = [...day.regions].filter(r=>r.fwi!=null).sort((a,b)=>a.fwi-b.fwi);
-      if(sorted.length===0) return `Belum ada data FWI untuk ${lower1(dayLabel)}.`;
-      rememberKab(sorted[0].name); context.lastDayOffset=offset; context.lastMetric=metric;
-      const ans = `Yang paling aman ${lower1(dayLabel)} adalah ` + describeRegion(sorted[0], dayLabel, metric);
-      pushHistory(rawQuery, ans); return ans;
-    }
-
-    // --- hitung jumlah wilayah per status ---
-    const statusWord = ['ekstrim','tinggi','sedang','rendah'].find(s=>q.includes(s));
-    if(statusWord && /(berapa|jumlah|ada berapa)/.test(q)){
-      const count = day.regions.filter(r=>classifyFWI(r.fwi)===statusWord).length;
-      const names = day.regions.filter(r=>classifyFWI(r.fwi)===statusWord).map(r=>r.name);
-      let msg = `${CLASS_EMOJI[statusWord]} Ada <b>${count}</b> kabupaten/kota berstatus <b>${CLASS_LABEL[statusWord]}</b> ${lower1(dayLabel)}`;
-      msg += count>0 ? `: ${names.join(', ')}.` : '.';
-      pushHistory(rawQuery, msg);
-      return msg;
-    }
-
-    // --- entitas eksplisit disebut di query ini ---
-    if(kecMatchNow){
-      rememberKec(kecMatchNow); context.lastDayOffset=offset; context.lastMetric=metric;
-      const ans = describeKecamatan(kecMatchNow.kec, kecMatchNow.kab, dayLabel, metric);
-      pushHistory(rawQuery, ans);
-      return ans;
-    }
-    const kabMatch = findKabAlias(q);
-    if(kabMatch){
-      const r = day.regions.find(x=>x.name===kabMatch);
-      if(r){
-        rememberKab(kabMatch); context.lastDayOffset=offset; context.lastMetric=metric;
-        const ans = describeRegion(r, dayLabel, metric);
-        pushHistory(rawQuery, ans);
-        return ans;
-      }
-    }
-
-    // ---------------------------------------------------------------
-    // FOLLOW-UP: tidak ada nama wilayah baru disebut, tapi ada konteks
-    // tersimpan dari pertanyaan sebelumnya (mis. cuma "kalau besok?"
-    // atau "FFMC-nya berapa?") -- inilah inti fitur "memori" chatbot.
-    // ---------------------------------------------------------------
-    const looksLikeFollowUp = !hasExplicitEntity && (context.lastKab || context.lastKecInfo) &&
-                               (explicitDay || explicitMetric || FOLLOWUP_CUES.test(q));
-    if(looksLikeFollowUp){
-      let ans;
-      if(context.lastKecInfo){
-        const kRegion = day.regions.find(r=>r.name===context.lastKecInfo.kab);
-        const kec = kRegion ? (kRegion.kecamatan||[]).find(x=>x.name===context.lastKecInfo.kec.name) : null;
-        ans = kec ? describeKecamatan(kec, context.lastKecInfo.kab, dayLabel, metric)
-                  : `Data <b>${context.lastKecInfo.kec.name}</b> untuk ${lower1(dayLabel)} tidak ditemukan.`;
-      } else {
-        const r = day.regions.find(x=>x.name===context.lastKab);
-        ans = r ? describeRegion(r, dayLabel, metric) : `Data <b>${context.lastKab}</b> untuk ${lower1(dayLabel)} tidak ditemukan.`;
-      }
-      context.lastDayOffset = offset; context.lastMetric = metric;
-      pushHistory(rawQuery, ans);
-      return ans;
-    }
-
-    const fallback = [
-      'Hmm, belum kenal nama daerah itu 🤔 Coba sebutkan nama kabupaten/kota (Samarinda, Balikpapan, Bontang, Kukar, Kutai Timur, Kutai Barat, Paser, PPU, Berau, Mahakam Ulu) atau nama kecamatannya ya.',
-      'Wilayahnya belum saya kenali 🙏 Coba ketik nama kabupaten/kota atau kecamatan yang lebih spesifik, misalnya "FWI Bontang besok" atau "kondisi Kukar hari ini".',
-    ];
-    const ans = pick(fallback);
-    pushHistory(rawQuery, ans);
-    return ans;
+  function dayPickerStatus(status){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-xs text-slate-400 mb-2">Pilih hari untuk filter <b>'+CLASS_LABEL[status]+'</b>:</div>');
+    addButtons(
+      payload.days.map(d=>({
+        label:'<i class="fa-regular fa-calendar text-blue-400 w-4 mr-2"></i>'+shortDay(d),
+        action:()=> showStatusFilter(status, d.offset),
+      })).concat([
+        { label:'← Ganti status', style:STYLES.btnBack, showArrow:false, action:()=>statusFilterMenu() },
+        { label:'🏠 Menu utama', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() },
+      ])
+    );
   }
 
-  function appendMsg(html, who){
-    const log = document.getElementById('chatLog');
-    if(!log) return;
-    const bubble = document.createElement('div');
-    bubble.className = who==='user'
-      ? 'ml-auto max-w-[85%] bg-red-600 text-white rounded-xl rounded-br-sm px-3 py-2'
-      : 'mr-auto max-w-[85%] bg-slate-700 text-slate-100 rounded-xl rounded-bl-sm px-3 py-2';
-    bubble.innerHTML = html;
-    log.appendChild(bubble);
-    log.scrollTop = log.scrollHeight;
+  function showStatusFilter(status, offset){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    const day = getDay(offset);
+    const dl = shortDay(day);
+    const filtered = day.regions.filter(r=>classifyFWI(r.fwi)===status);
+    const label = EMOJI[status]+' '+CLASS_LABEL[status];
+
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-triangle-exclamation text-orange-400 mr-1"></i> Wilayah '+label+' · '+dl+'</div>');
+
+    if(filtered.length===0){
+      addMsg('<div class="bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-3 text-xs text-slate-400 text-center">Tidak ada wilayah dengan status <b>'+CLASS_LABEL[status]+'</b> pada '+dl.toLowerCase()+'.</div>');
+    } else {
+      let html = '<div class="text-xs text-slate-400 mb-2">Ada <b class="text-white">'+filtered.length+'</b> wilayah:</div><div class="bg-slate-900/50 border border-slate-700 rounded-xl overflow-hidden"><table class="w-full text-xs"><thead><tr class="text-slate-500 text-[10px] uppercase border-b border-slate-700"><th class="text-left py-2 px-3">Wilayah</th><th class="py-2 px-2 text-center">FWI</th><th class="py-2 px-2 text-center">FFMC</th></tr></thead><tbody>';
+      filtered.forEach(r=>{
+        const fc=classifyFFMC(r.ffmc);
+        html += '<tr class="border-b border-slate-700/50 hover:bg-slate-800/30"><td class="py-2 px-3 text-slate-200 font-medium">'+r.name+'</td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(classifyFWI(r.fwi))+'">'+r.fwi+'</span></td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(fc)+'">'+r.ffmc+'</span></td></tr>';
+      });
+      html += '</tbody></table></div>';
+      addMsg(html);
+    }
+
+    addBack('Ganti hari', ()=>dayPickerStatus(status));
+    addBack('Menu utama', ()=>mainMenu());
   }
+
+  /* ========== 7. MULTI-HARI ========== */
+
+  function multiDayMenu(){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-calendar-days text-cyan-400 mr-1"></i> Data multi-hari</div><div class="text-xs text-slate-400 mb-2">Pilih wilayah untuk melihat data semua hari sekaligus:</div>');
+    const items = REGIONS.map(r=>({
+      label:'<i class="fa-solid fa-caret-right text-slate-500 w-4 mr-1"></i>'+r.short,
+      action:()=> showMultiDay(r.name),
+    }));
+    items.push({ label:'← Kembali', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() });
+    addButtons(items);
+  }
+
+  function showMultiDay(regionName){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-calendar-days text-cyan-400 mr-1"></i> '+regionName+' · Semua hari</div>');
+
+    let html = '<div class="bg-slate-900/50 border border-slate-700 rounded-xl overflow-hidden"><table class="w-full text-xs"><thead><tr class="text-slate-500 text-[10px] uppercase border-b border-slate-700"><th class="text-left py-2 px-3">Hari</th><th class="py-2 px-2 text-center">FFMC</th><th class="py-2 px-2 text-center">FWI</th><th class="py-2 px-2 text-center">Status</th></tr></thead><tbody>';
+    payload.days.forEach(day=>{
+      const r = day.regions.find(x=>x.name===regionName);
+      if(!r) return;
+      const fc=classifyFFMC(r.ffmc), wc=classifyFWI(r.fwi);
+      html += '<tr class="border-b border-slate-700/50"><td class="py-2 px-3 text-slate-200 font-medium">'+shortDay(day)+'</td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(fc)+'">'+fmtV(r.ffmc)+'</span></td><td class="py-2 px-2 text-center"><span class="'+STYLES.badge(wc)+'">'+fmtV(r.fwi)+'</span></td><td class="py-2 px-2 text-center text-[10px]">'+EMOJI[wc]+' '+CLASS_LABEL[wc]+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    addMsg(html);
+
+    addBack('Pilih wilayah lain', ()=>multiDayMenu());
+    addBack('Menu utama', ()=>mainMenu());
+  }
+
+  /* ========== 8. REKOMENDASI ========== */
+
+  function recommendMenu(){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-lightbulb text-yellow-400 mr-1"></i> Rekomendasi tindakan</div><div class="text-xs text-slate-400 mb-2">Pilih hari, lalu pilih wilayah untuk melihat panduan tindakan:</div>');
+    addButtons(
+      payload.days.map(d=>({
+        label:'<i class="fa-regular fa-calendar text-blue-400 w-4 mr-2"></i>'+shortDay(d),
+        action:()=> recommendPickRegion(d.offset),
+      })).concat([
+        { label:'← Kembali', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() },
+      ])
+    );
+  }
+
+  function recommendPickRegion(offset){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-xs text-slate-400 mb-2">Pilih wilayah:</div>');
+    const items = REGIONS.map(r=>({
+      label:'<i class="fa-solid fa-caret-right text-slate-500 w-4 mr-1"></i>'+r.short,
+      action:()=> showRecommendation(r.name, offset),
+    }));
+    items.push({ label:'← Ganti hari', style:STYLES.btnBack, showArrow:false, action:()=>recommendMenu() });
+    items.push({ label:'🏠 Menu utama', style:STYLES.btnBack, showArrow:false, action:()=>mainMenu() });
+    addButtons(items);
+  }
+
+  function showRecommendation(regionName, offset){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    const day = getDay(offset);
+    const dl = shortDay(day);
+    const r = day.regions.find(x=>x.name===regionName);
+
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-lightbulb text-yellow-400 mr-1"></i> Rekomendasi · '+regionName+' · '+dl+'</div>');
+
+    if(!r){
+      addMsg('<div class="'+STYLES.info+'">Data tidak tersedia.</div>');
+      return;
+    }
+
+    const fc = classifyFFMC(r.ffmc), wc = classifyFWI(r.fwi);
+    addMsg('<div class="'+STYLES.info+'">'+panduanUmum(wc, fc, r.name)+'</div>');
+
+    // Ringkasan angka
+    let html = '<div class="bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-2 mt-2 text-xs space-y-1">';
+    html += '<div class="flex justify-between"><span class="text-slate-400">FFMC</span><span class="'+STYLES.badge(fc)+'">'+fmtV(r.ffmc)+' · '+CLASS_LABEL[fc]+'</span></div>';
+    html += '<div class="flex justify-between"><span class="text-slate-400">FWI</span><span class="'+STYLES.badge(wc)+'">'+fmtV(r.fwi)+' · '+CLASS_LABEL[wc]+'</span></div>';
+    html += '</div>';
+    addMsg(html);
+
+    addBack('Pilih wilayah lain', ()=>recommendPickRegion(offset));
+    addBack('Menu utama', ()=>mainMenu());
+  }
+
+  /* ========== 9. PENJELASAN FFMC/FWI ========== */
+
+  function explainMenu(){
+    const log = el('chatLog');
+    log.innerHTML = '';
+    addMsg('<div class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-circle-question text-slate-400 mr-1"></i> Penjelasan Indeks</div>');
+
+    addMsg('<div class="bg-blue-950/30 border border-blue-800/50 rounded-xl px-4 py-3 mb-2">'
+      + '<div class="flex items-center gap-2 mb-1">'
+      + '<span class="font-mono font-bold text-xs text-blue-400 bg-blue-950 px-2 py-0.5 rounded border border-blue-800">FFMC</span>'
+      + '<span class="font-bold text-sm text-white">Fine Fuel Moisture Code</span>'
+      + '</div>'
+      + '<p class="text-xs text-slate-300 leading-relaxed mb-2">Mengukur tingkat kekeringan bahan bakar ringan di permukaan tanah — dedaunan gugur, ranting kecil, alang-alang. Bahan setipis ini bereaksi cepat terhadap panas dan angin, jadi nilainya bisa berubah drastis dalam hitungan jam.</p>'
+      + '<div class="text-[11px] bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-slate-400">Skala 0–101. Makin <b class="text-blue-400">tinggi</b>, permukaan makin kering dan makin gampang tersulut.</div>'
+      + '<div class="mt-2 space-y-1 text-[11px]">'
+      + '<div class="flex justify-between"><span>🟢 Rendah</span><span class="text-slate-400">&lt; 76</span></div>'
+      + '<div class="flex justify-between"><span>🟡 Sedang</span><span class="text-slate-400">76 – 83</span></div>'
+      + '<div class="flex justify-between"><span>🟠 Tinggi</span><span class="text-slate-400">83 – 89</span></div>'
+      + '<div class="flex justify-between"><span>🔴 Ekstrim</span><span class="text-slate-400">≥ 89</span></div>'
+      + '</div></div>');
+
+    addMsg('<div class="bg-red-950/30 border border-red-800/50 rounded-xl px-4 py-3 mb-2">'
+      + '<div class="flex items-center gap-2 mb-1">'
+      + '<span class="font-mono font-bold text-xs text-red-400 bg-red-950 px-2 py-0.5 rounded border border-red-800">FWI</span>'
+      + '<span class="font-bold text-sm text-white">Fire Weather Index</span>'
+      + '</div>'
+      + '<p class="text-xs text-slate-300 leading-relaxed mb-2">Menggabungkan kekeringan bahan bakar dengan kondisi cuaca (angin, kelembapan) untuk memperkirakan seberapa besar dan cepat api bisa membesar apabila kebakaran benar-benar terjadi. Ini indeks yang dipakai sebagai status siaga utama di dashboard ini.</p>'
+      + '<div class="text-[11px] bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-slate-400">Makin <b class="text-red-400">tinggi</b>, makin besar potensi intensitas api dan makin sulit dikendalikan.</div>'
+      + '<div class="mt-2 space-y-1 text-[11px]">'
+      + '<div class="flex justify-between"><span>🟢 Rendah</span><span class="text-slate-400">&lt; 2</span></div>'
+      + '<div class="flex justify-between"><span>🟡 Sedang</span><span class="text-slate-400">2 – 7</span></div>'
+      + '<div class="flex justify-between"><span>🟠 Tinggi</span><span class="text-slate-400">7 – 13</span></div>'
+      + '<div class="flex justify-between"><span>🔴 Ekstrim</span><span class="text-slate-400">≥ 13</span></div>'
+      + '</div></div>');
+
+    addMsg('<div class="text-[11px] text-slate-500 leading-relaxed px-1">Ambang mengikuti kelas umum SPBK/FWI Kanada yang diadopsi BMKG. Data dari <a href="https://spartan.bmkg.go.id/MapInteractive" target="_blank" class="text-blue-400 hover:underline">spartan.bmkg.go.id</a>. Panduan tindakan bersifat referensi umum, bukan SOP resmi BPBD/BMKG.</div>');
+
+    addBack('Menu utama', ()=>mainMenu());
+  }
+
+  /* ========== PANEL CONTROLS ========== */
 
   const toggleBtn = document.getElementById('chatToggleBtn');
   const panel = document.getElementById('chatPanel');
   const closeBtn = document.getElementById('chatCloseBtn');
-  const form = document.getElementById('chatForm');
-  const input = document.getElementById('chatInput');
-  let greeted = false;
 
   if(toggleBtn){
     toggleBtn.addEventListener('click', ()=>{
       const hidden = panel.classList.contains('hidden');
       panel.classList.toggle('hidden');
       panel.classList.toggle('flex', hidden);
-      if(hidden && !greeted){ appendMsg(answerQuery('halo'), 'bot'); greeted = true; }
-      if(hidden) input.focus();
+      if(hidden && !el('chatLog').children.length) mainMenu();
     });
     closeBtn.addEventListener('click', ()=>{
       panel.classList.add('hidden');
       panel.classList.remove('flex');
     });
-    form.addEventListener('submit', (e)=>{
-      e.preventDefault();
-      const q = input.value.trim();
-      if(!q) return;
-      appendMsg(q.replace(/</g,'&lt;'), 'user');
-      input.value = '';
-      setTimeout(()=> appendMsg(answerQuery(q), 'bot'), 150);
-    });
   }
 
-  // diekspos ke window HANYA untuk keperluan automated testing
-  if(typeof window !== 'undefined') window.__answerQuery = answerQuery;
-  if(typeof window !== 'undefined') window.__chatContext = ()=>context;
 })();
 </script>
 </body>
