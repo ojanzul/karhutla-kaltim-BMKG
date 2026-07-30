@@ -1,106 +1,106 @@
 {
-  "generated_at": "2026-07-29T10:03",
+  "generated_at": "2026-07-30T10:08",
   "method": "zonal_kecamatan_idw",
   "days": [
     {
       "date": "2026-07-31",
-      "offset": 2,
+      "offset": 1,
       "regions": [
         {
           "name": "Kab. Berau",
-          "ffmc": 75.2,
-          "fwi": 2.6,
+          "ffmc": 82.3,
+          "fwi": 4.6,
           "n_grid_ffmc": 104,
           "n_grid_fwi": 104,
           "kecamatan": [
             {
-              "name": "Tabalar",
-              "ffmc": 79.9,
-              "fwi": 4.8,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
               "name": "Batu Putih",
-              "ffmc": 68.5,
-              "fwi": 4.6,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Gunung Tabur",
               "ffmc": 84.1,
-              "fwi": 3.6,
+              "fwi": 9,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Biduk-Biduk",
-              "ffmc": 75.5,
-              "fwi": 3.1,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Tanjung Redeb",
-              "ffmc": 81.5,
-              "fwi": 3.1,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Maratua",
-              "ffmc": 79.4,
-              "fwi": 2.8,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Sambaliung",
-              "ffmc": 78.8,
-              "fwi": 2.6,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Kelay",
               "ffmc": 85.5,
-              "fwi": 2,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Segah",
-              "ffmc": 82.1,
-              "fwi": 1.8,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Talisayan",
-              "ffmc": 63.7,
-              "fwi": 1.7,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Pulau Derawan",
-              "ffmc": 72,
-              "fwi": 1.6,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Teluk Bayur",
-              "ffmc": 77.3,
-              "fwi": 0.9,
+              "fwi": 7.5,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Biatan",
-              "ffmc": 49.5,
-              "fwi": 0.7,
+              "ffmc": 81.9,
+              "fwi": 7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Pulau Derawan",
+              "ffmc": 82,
+              "fwi": 5.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sambaliung",
+              "ffmc": 84.6,
+              "fwi": 5.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tabalar",
+              "ffmc": 81.8,
+              "fwi": 5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Talisayan",
+              "ffmc": 78.1,
+              "fwi": 4.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Gunung Tabur",
+              "ffmc": 84.2,
+              "fwi": 4.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tanjung Redeb",
+              "ffmc": 83.5,
+              "fwi": 4.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Segah",
+              "ffmc": 86.4,
+              "fwi": 3.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Teluk Bayur",
+              "ffmc": 81.6,
+              "fwi": 1.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kelay",
+              "ffmc": 83.9,
+              "fwi": 1.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Maratua",
+              "ffmc": 71.9,
+              "fwi": 1.1,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             }
@@ -108,120 +108,120 @@
         },
         {
           "name": "Kab. Kutai Barat",
-          "ffmc": 84.1,
-          "fwi": 4,
+          "ffmc": 85.4,
+          "fwi": 5,
           "n_grid_ffmc": 128,
           "n_grid_fwi": 128,
           "kecamatan": [
             {
-              "name": "Penyinggahan",
-              "ffmc": 85.8,
-              "fwi": 8,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
               "name": "Jempang",
-              "ffmc": 85.7,
-              "fwi": 7.2,
+              "ffmc": 85.9,
+              "fwi": 9.8,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
-              "name": "Muara Pahu",
-              "ffmc": 85.5,
-              "fwi": 6.3,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Siluq Ngurai",
-              "ffmc": 84.4,
-              "fwi": 5.8,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Bongan",
-              "ffmc": 82,
-              "fwi": 4.4,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Melak",
-              "ffmc": 84.1,
-              "fwi": 4.3,
+              "name": "Penyinggahan",
+              "ffmc": 83.6,
+              "fwi": 7.4,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Muara Lawa",
-              "ffmc": 84.5,
-              "fwi": 3.8,
+              "ffmc": 86.4,
+              "fwi": 6.9,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
-              "name": "Bentian Besar",
-              "ffmc": 84.2,
-              "fwi": 3.6,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Sekolaq Darat",
-              "ffmc": 83.7,
-              "fwi": 3.6,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Long Iram",
-              "ffmc": 83.4,
-              "fwi": 2.7,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Barong Tongkok",
-              "ffmc": 83.3,
-              "fwi": 2.6,
+              "name": "Muara Pahu",
+              "ffmc": 86.7,
+              "fwi": 6.9,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Damai",
-              "ffmc": 84.4,
-              "fwi": 2.6,
+              "ffmc": 85.6,
+              "fwi": 6.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Melak",
+              "ffmc": 86.2,
+              "fwi": 5.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Bentian Besar",
+              "ffmc": 83.2,
+              "fwi": 4.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Bongan",
+              "ffmc": 84.9,
+              "fwi": 4.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Siluq Ngurai",
+              "ffmc": 82.9,
+              "fwi": 4.5,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Nyuatan",
-              "ffmc": 84.2,
-              "fwi": 2.4,
+              "ffmc": 86.9,
+              "fwi": 4,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
-              "name": "Tering",
-              "ffmc": 84.7,
-              "fwi": 2.4,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Linggang Bigung",
-              "ffmc": 82.4,
-              "fwi": 2.3,
+              "name": "Sekolaq Darat",
+              "ffmc": 86.4,
+              "fwi": 3.8,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Mook Manaar Bulatn",
-              "ffmc": 83.7,
-              "fwi": 2.2,
+              "ffmc": 85.9,
+              "fwi": 3.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Linggang Bigung",
+              "ffmc": 85.2,
+              "fwi": 3.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Barong Tongkok",
+              "ffmc": 85.8,
+              "fwi": 3.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tering",
+              "ffmc": 85.6,
+              "fwi": 2.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Iram",
+              "ffmc": 85,
+              "fwi": 2.3,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             }
@@ -229,148 +229,148 @@
         },
         {
           "name": "Kab. Kutai Kartanegara",
-          "ffmc": 81.6,
-          "fwi": 5.6,
+          "ffmc": 80.9,
+          "fwi": 6.1,
           "n_grid_ffmc": 160,
           "n_grid_fwi": 160,
           "kecamatan": [
             {
-              "name": "Muara Jawa",
-              "ffmc": 83.3,
-              "fwi": 11.5,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
               "name": "Samboja",
-              "ffmc": 83.9,
-              "fwi": 11,
+              "ffmc": 83.6,
+              "fwi": 10.2,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
-              "name": "Samboja Barat",
-              "ffmc": 82.4,
-              "fwi": 9.3,
+              "name": "Muara Jawa",
+              "ffmc": 82.8,
+              "fwi": 9.5,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Kota Bangun",
-              "ffmc": 84.4,
+              "ffmc": 85.1,
               "fwi": 9,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
-              "name": "Loa Janan",
-              "ffmc": 84,
-              "fwi": 8.5,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Anggana",
-              "ffmc": 80.3,
-              "fwi": 7.3,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Sanga Sanga",
-              "ffmc": 83,
-              "fwi": 7.3,
+              "name": "Muara Muntai",
+              "ffmc": 84.1,
+              "fwi": 9,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Loa Kulu",
+              "ffmc": 85.3,
+              "fwi": 8.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Samboja Barat",
               "ffmc": 83.7,
+              "fwi": 8.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Loa Janan",
+              "ffmc": 82.7,
               "fwi": 6.7,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
-              "name": "Muara Muntai",
-              "ffmc": 83.7,
-              "fwi": 6.1,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
               "name": "Tenggarong",
-              "ffmc": 82.7,
-              "fwi": 5.7,
+              "ffmc": 83.9,
+              "fwi": 6.6,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Muara Kaman",
-              "ffmc": 82.6,
-              "fwi": 5.2,
+              "ffmc": 83.2,
+              "fwi": 6.3,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Kota Bangun Darat",
-              "ffmc": 84.1,
-              "fwi": 4.9,
+              "ffmc": 85,
+              "fwi": 6.2,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
-              "name": "Muara Wis",
-              "ffmc": 85.1,
-              "fwi": 4.9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Sebulu",
-              "ffmc": 82.3,
-              "fwi": 4.2,
+              "name": "Anggana",
+              "ffmc": 78.6,
+              "fwi": 5.8,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Kenohan",
-              "ffmc": 84.6,
-              "fwi": 3.5,
+              "ffmc": 86.6,
+              "fwi": 5.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sanga Sanga",
+              "ffmc": 78.3,
+              "fwi": 5,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Tenggarong Seberang",
-              "ffmc": 77,
-              "fwi": 2.7,
+              "ffmc": 81.1,
+              "fwi": 4.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Wis",
+              "ffmc": 82.8,
+              "fwi": 4.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sebulu",
+              "ffmc": 80.8,
+              "fwi": 4.3,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Kembang Janggut",
-              "ffmc": 82.5,
-              "fwi": 1.4,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Tabang",
-              "ffmc": 80.9,
-              "fwi": 1.4,
+              "ffmc": 85.3,
+              "fwi": 4.2,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Marang Kayu",
-              "ffmc": 77,
-              "fwi": 1,
+              "ffmc": 58,
+              "fwi": 2.4,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Muara Badak",
-              "ffmc": 65.2,
-              "fwi": 0.5,
+              "ffmc": 68.3,
+              "fwi": 2.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tabang",
+              "ffmc": 79,
+              "fwi": 1,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             }
@@ -378,134 +378,134 @@
         },
         {
           "name": "Kab. Kutai Timur",
-          "ffmc": 79.8,
-          "fwi": 3.2,
+          "ffmc": 76.6,
+          "fwi": 4.1,
           "n_grid_ffmc": 144,
           "n_grid_fwi": 144,
           "kecamatan": [
             {
-              "name": "Karangan",
-              "ffmc": 83.7,
-              "fwi": 6.2,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Sandaran",
-              "ffmc": 82,
-              "fwi": 6,
+              "name": "Kaliorang",
+              "ffmc": 84.6,
+              "fwi": 10.4,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Sangkulirang",
-              "ffmc": 81.2,
-              "fwi": 5.6,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Rantau Pulung",
-              "ffmc": 83.3,
-              "fwi": 4.6,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Kaliorang",
-              "ffmc": 75.3,
-              "fwi": 4.4,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Bengalon",
-              "ffmc": 83.9,
-              "fwi": 4.1,
+              "ffmc": 84.6,
+              "fwi": 9.1,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Kaubun",
-              "ffmc": 72.6,
-              "fwi": 3.9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Kombeng",
-              "ffmc": 82.6,
-              "fwi": 3.9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Muara Wahau",
-              "ffmc": 82.8,
-              "fwi": 3.9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Telen",
-              "ffmc": 83.8,
-              "fwi": 2.8,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Batu Ampar",
-              "ffmc": 78.5,
-              "fwi": 2.1,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Long Mesangat",
-              "ffmc": 81.9,
-              "fwi": 2.1,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Muara Ancalong",
-              "ffmc": 82.2,
-              "fwi": 2.1,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Muara Bengkal",
-              "ffmc": 81.3,
-              "fwi": 1.9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Busang",
-              "ffmc": 80.1,
-              "fwi": 1.2,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Teluk Pandan",
-              "ffmc": 74.6,
-              "fwi": 1.2,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Sangatta Selatan",
-              "ffmc": 77.8,
-              "fwi": 0.9,
+              "ffmc": 83.9,
+              "fwi": 8.8,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Sangatta Utara",
-              "ffmc": 68.9,
-              "fwi": 0.9,
+              "ffmc": 83.3,
+              "fwi": 6.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sandaran",
+              "ffmc": 83.1,
+              "fwi": 6.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Bengalon",
+              "ffmc": 82.5,
+              "fwi": 4.3,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Bengkal",
+              "ffmc": 83.4,
+              "fwi": 4.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Ancalong",
+              "ffmc": 85.7,
+              "fwi": 3.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sangatta Selatan",
+              "ffmc": 60.4,
+              "fwi": 3.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Karangan",
+              "ffmc": 82.6,
+              "fwi": 3.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Teluk Pandan",
+              "ffmc": 57.8,
+              "fwi": 2.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kombeng",
+              "ffmc": 66.9,
+              "fwi": 2.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Wahau",
+              "ffmc": 81.1,
+              "fwi": 2.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Rantau Pulung",
+              "ffmc": 65.2,
+              "fwi": 2.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Mesangat",
+              "ffmc": 78.1,
+              "fwi": 2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Batu Ampar",
+              "ffmc": 62.1,
+              "fwi": 1.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Telen",
+              "ffmc": 76.9,
+              "fwi": 0.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Busang",
+              "ffmc": 76.1,
+              "fwi": 0.7,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             }
@@ -513,43 +513,43 @@
         },
         {
           "name": "Kab. Mahakam Ulu",
-          "ffmc": 82.1,
-          "fwi": 1.2,
+          "ffmc": 79.9,
+          "fwi": 1.9,
           "n_grid_ffmc": 40,
           "n_grid_fwi": 40,
           "kecamatan": [
             {
-              "name": "Long Hubung",
-              "ffmc": 82.5,
-              "fwi": 2.5,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
               "name": "Long Bagun",
-              "ffmc": 80.2,
-              "fwi": 2.3,
+              "ffmc": 75.5,
+              "fwi": 2.7,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Laham",
-              "ffmc": 83.6,
-              "fwi": 1.1,
+              "ffmc": 80.4,
+              "fwi": 2.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Hubung",
+              "ffmc": 84.8,
+              "fwi": 1.8,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Long Apari",
-              "ffmc": 82.8,
-              "fwi": 0.2,
+              "ffmc": 79,
+              "fwi": 1.6,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Long Pahangai",
-              "ffmc": 81.4,
-              "fwi": 0.1,
+              "ffmc": 79.9,
+              "fwi": 1.1,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             }
@@ -557,78 +557,78 @@
         },
         {
           "name": "Kab. Paser",
-          "ffmc": 83.3,
-          "fwi": 9.7,
+          "ffmc": 83.2,
+          "fwi": 9.1,
           "n_grid_ffmc": 80,
           "n_grid_fwi": 80,
           "kecamatan": [
             {
-              "name": "Tanjung Harapan",
-              "ffmc": 86.3,
-              "fwi": 18,
+              "name": "Batu Engau",
+              "ffmc": 86.4,
+              "fwi": 17.2,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
-              "name": "Batu Engau",
-              "ffmc": 84.5,
-              "fwi": 15,
+              "name": "Tanjung Harapan",
+              "ffmc": 83.6,
+              "fwi": 17.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Samu",
+              "ffmc": 85.1,
+              "fwi": 12,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Paser Belengkong",
               "ffmc": 84.3,
-              "fwi": 13.7,
+              "fwi": 11.5,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Tanah Grogot",
-              "ffmc": 82.8,
-              "fwi": 12.9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Kuaro",
-              "ffmc": 82.8,
-              "fwi": 8.9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Long Ikis",
-              "ffmc": 84.8,
-              "fwi": 8.5,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Muara Samu",
-              "ffmc": 79.8,
-              "fwi": 6.5,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Muara Komam",
-              "ffmc": 84.4,
-              "fwi": 5.6,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Long Kali",
-              "ffmc": 83.2,
-              "fwi": 4.3,
+              "ffmc": 82.5,
+              "fwi": 9.1,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Batu Sopang",
-              "ffmc": 80,
-              "fwi": 4.1,
+              "ffmc": 82.1,
+              "fwi": 5.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kuaro",
+              "ffmc": 81.3,
+              "fwi": 5.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Ikis",
+              "ffmc": 81.9,
+              "fwi": 5.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Komam",
+              "ffmc": 83.1,
+              "fwi": 5.3,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Kali",
+              "ffmc": 82,
+              "fwi": 2.2,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             }
@@ -636,36 +636,36 @@
         },
         {
           "name": "Kab. Penajam Paser Utara",
-          "ffmc": 82.9,
-          "fwi": 8.5,
+          "ffmc": 82.4,
+          "fwi": 6.6,
           "n_grid_ffmc": 32,
           "n_grid_fwi": 32,
           "kecamatan": [
             {
               "name": "Sepaku",
-              "ffmc": 83.9,
-              "fwi": 10.6,
+              "ffmc": 85.9,
+              "fwi": 9,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Penajam",
-              "ffmc": 82.5,
-              "fwi": 8.1,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Waru",
-              "ffmc": 82.2,
+              "ffmc": 83.8,
               "fwi": 8,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
+              "name": "Waru",
+              "ffmc": 81.2,
+              "fwi": 5.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
               "name": "Babulu",
-              "ffmc": 83.1,
-              "fwi": 7.3,
+              "ffmc": 78.7,
+              "fwi": 3.5,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             }
@@ -673,50 +673,50 @@
         },
         {
           "name": "Kota Balikpapan",
-          "ffmc": 81.9,
-          "fwi": 7.2,
+          "ffmc": 83.1,
+          "fwi": 9.2,
           "n_grid_ffmc": 48,
           "n_grid_fwi": 48,
           "kecamatan": [
             {
-              "name": "Balikpapan Barat",
-              "ffmc": 82.9,
-              "fwi": 9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Balikpapan Utara",
-              "ffmc": 82.5,
-              "fwi": 7.6,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Balikpapan Timur",
-              "ffmc": 82.1,
-              "fwi": 7.3,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
               "name": "Balikpapan Selatan",
-              "ffmc": 81.4,
-              "fwi": 6.9,
+              "ffmc": 83.5,
+              "fwi": 11.2,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Balikpapan Kota",
-              "ffmc": 81.4,
-              "fwi": 6.2,
+              "ffmc": 83.2,
+              "fwi": 9.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Balikpapan Utara",
+              "ffmc": 82.8,
+              "fwi": 9.7,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Balikpapan Tengah",
-              "ffmc": 81.3,
-              "fwi": 6.1,
+              "ffmc": 82.9,
+              "fwi": 9.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Balikpapan Timur",
+              "ffmc": 82.9,
+              "fwi": 7.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Balikpapan Barat",
+              "ffmc": 83,
+              "fwi": 7.4,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             }
@@ -724,29 +724,29 @@
         },
         {
           "name": "Kota Bontang",
-          "ffmc": 75.3,
-          "fwi": 2,
+          "ffmc": 64.4,
+          "fwi": 0.8,
           "n_grid_ffmc": 24,
           "n_grid_fwi": 24,
           "kecamatan": [
             {
-              "name": "Bontang Utara",
-              "ffmc": 79.4,
-              "fwi": 2.3,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
               "name": "Bontang Selatan",
-              "ffmc": 70.2,
-              "fwi": 2.2,
+              "ffmc": 63.7,
+              "fwi": 1.3,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Bontang Barat",
-              "ffmc": 76.4,
-              "fwi": 1.6,
+              "ffmc": 64.3,
+              "fwi": 0.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Bontang Utara",
+              "ffmc": 65.1,
+              "fwi": 0.1,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             }
@@ -754,78 +754,909 @@
         },
         {
           "name": "Kota Samarinda",
-          "ffmc": 81.8,
-          "fwi": 5.6,
+          "ffmc": 81.4,
+          "fwi": 5.9,
           "n_grid_ffmc": 80,
           "n_grid_fwi": 80,
           "kecamatan": [
             {
+              "name": "Sungai Pinang",
+              "ffmc": 83.9,
+              "fwi": 7.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
               "name": "Samarinda Ulu",
-              "ffmc": 81.3,
-              "fwi": 6.5,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Palaran",
-              "ffmc": 82,
-              "fwi": 6.3,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Loa Janan Ilir",
-              "ffmc": 84,
-              "fwi": 5.9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Samarinda Kota",
-              "ffmc": 82,
-              "fwi": 5.9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Samarinda Seberang",
-              "ffmc": 82.6,
-              "fwi": 5.9,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Samarinda Ilir",
-              "ffmc": 81.9,
-              "fwi": 5.8,
+              "ffmc": 85.2,
+              "fwi": 7.4,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Sungai Kunjang",
-              "ffmc": 82.9,
-              "fwi": 5.6,
+              "ffmc": 83.1,
+              "fwi": 6.3,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
-              "name": "Sambutan",
-              "ffmc": 82.2,
-              "fwi": 5.3,
-              "n_grid_ffmc": 8,
-              "n_grid_fwi": 8
-            },
-            {
-              "name": "Sungai Pinang",
-              "ffmc": 81.4,
-              "fwi": 5.2,
+              "name": "Samarinda Kota",
+              "ffmc": 81.7,
+              "fwi": 6.2,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             },
             {
               "name": "Samarinda Utara",
-              "ffmc": 77.2,
+              "ffmc": 82.4,
+              "fwi": 6.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Samarinda Ilir",
+              "ffmc": 81,
+              "fwi": 6.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Samarinda Seberang",
+              "ffmc": 81.1,
+              "fwi": 6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Loa Janan Ilir",
+              "ffmc": 81,
+              "fwi": 4.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sambutan",
+              "ffmc": 77.3,
+              "fwi": 4.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Palaran",
+              "ffmc": 77.7,
               "fwi": 4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-08-01",
+      "offset": 2,
+      "regions": [
+        {
+          "name": "Kab. Berau",
+          "ffmc": 80.6,
+          "fwi": 5.1,
+          "n_grid_ffmc": 104,
+          "n_grid_fwi": 104,
+          "kecamatan": [
+            {
+              "name": "Batu Putih",
+              "ffmc": 84.5,
+              "fwi": 9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sambaliung",
+              "ffmc": 85.9,
+              "fwi": 9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Biatan",
+              "ffmc": 84.1,
+              "fwi": 8.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Talisayan",
+              "ffmc": 82.1,
+              "fwi": 6.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Biduk-Biduk",
+              "ffmc": 79.2,
+              "fwi": 5.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tabalar",
+              "ffmc": 82.9,
+              "fwi": 4.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tanjung Redeb",
+              "ffmc": 84,
+              "fwi": 4.3,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Teluk Bayur",
+              "ffmc": 84.6,
+              "fwi": 3.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Pulau Derawan",
+              "ffmc": 72.1,
+              "fwi": 3.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Gunung Tabur",
+              "ffmc": 66.1,
+              "fwi": 3.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Maratua",
+              "ffmc": 77.9,
+              "fwi": 3,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kelay",
+              "ffmc": 86.4,
+              "fwi": 2.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Segah",
+              "ffmc": 78,
+              "fwi": 2.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            }
+          ]
+        },
+        {
+          "name": "Kab. Kutai Barat",
+          "ffmc": 82.8,
+          "fwi": 4,
+          "n_grid_ffmc": 128,
+          "n_grid_fwi": 128,
+          "kecamatan": [
+            {
+              "name": "Penyinggahan",
+              "ffmc": 85.3,
+              "fwi": 8.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Jempang",
+              "ffmc": 82.5,
+              "fwi": 6.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Bentian Besar",
+              "ffmc": 84.8,
+              "fwi": 5.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Bongan",
+              "ffmc": 83.2,
+              "fwi": 5.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Lawa",
+              "ffmc": 86.5,
+              "fwi": 5.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Pahu",
+              "ffmc": 86.4,
+              "fwi": 5.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Damai",
+              "ffmc": 86,
+              "fwi": 4.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Nyuatan",
+              "ffmc": 85.6,
+              "fwi": 4.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Siluq Ngurai",
+              "ffmc": 85.1,
+              "fwi": 4.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Mook Manaar Bulatn",
+              "ffmc": 84.6,
+              "fwi": 3.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Melak",
+              "ffmc": 81,
+              "fwi": 2.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sekolaq Darat",
+              "ffmc": 79.7,
+              "fwi": 2.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Iram",
+              "ffmc": 80,
+              "fwi": 2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Barong Tongkok",
+              "ffmc": 81,
+              "fwi": 1.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tering",
+              "ffmc": 74.2,
+              "fwi": 1.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Linggang Bigung",
+              "ffmc": 78.3,
+              "fwi": 1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            }
+          ]
+        },
+        {
+          "name": "Kab. Kutai Kartanegara",
+          "ffmc": 83.3,
+          "fwi": 7.2,
+          "n_grid_ffmc": 160,
+          "n_grid_fwi": 160,
+          "kecamatan": [
+            {
+              "name": "Muara Jawa",
+              "ffmc": 84,
+              "fwi": 11.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Samboja",
+              "ffmc": 83.7,
+              "fwi": 11.3,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Kaman",
+              "ffmc": 85.2,
+              "fwi": 10.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Samboja Barat",
+              "ffmc": 82.3,
+              "fwi": 10.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kota Bangun",
+              "ffmc": 86.7,
+              "fwi": 8.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Loa Kulu",
+              "ffmc": 82.7,
+              "fwi": 8.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Muntai",
+              "ffmc": 84.7,
+              "fwi": 8.3,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Anggana",
+              "ffmc": 82.7,
+              "fwi": 8.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Loa Janan",
+              "ffmc": 83.9,
+              "fwi": 8.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sanga Sanga",
+              "ffmc": 83.3,
+              "fwi": 8.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tenggarong",
+              "ffmc": 84.6,
+              "fwi": 8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kenohan",
+              "ffmc": 86.5,
+              "fwi": 7.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Wis",
+              "ffmc": 85.6,
+              "fwi": 7.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sebulu",
+              "ffmc": 83.6,
+              "fwi": 6.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kota Bangun Darat",
+              "ffmc": 85,
+              "fwi": 5.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tenggarong Seberang",
+              "ffmc": 83.8,
+              "fwi": 5.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Badak",
+              "ffmc": 79.3,
+              "fwi": 4.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kembang Janggut",
+              "ffmc": 83.2,
+              "fwi": 4.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Marang Kayu",
+              "ffmc": 75.4,
+              "fwi": 1.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tabang",
+              "ffmc": 80.6,
+              "fwi": 0.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            }
+          ]
+        },
+        {
+          "name": "Kab. Kutai Timur",
+          "ffmc": 81.3,
+          "fwi": 3.9,
+          "n_grid_ffmc": 144,
+          "n_grid_fwi": 144,
+          "kecamatan": [
+            {
+              "name": "Sangkulirang",
+              "ffmc": 81.7,
+              "fwi": 9.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kaubun",
+              "ffmc": 84,
+              "fwi": 9.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kaliorang",
+              "ffmc": 78.6,
+              "fwi": 6.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sangatta Utara",
+              "ffmc": 80.2,
+              "fwi": 5.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Bengkal",
+              "ffmc": 85.7,
+              "fwi": 5.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Ancalong",
+              "ffmc": 85.5,
+              "fwi": 5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Karangan",
+              "ffmc": 84.9,
+              "fwi": 4.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Bengalon",
+              "ffmc": 82,
+              "fwi": 4.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kombeng",
+              "ffmc": 83.4,
+              "fwi": 4.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sandaran",
+              "ffmc": 77.1,
+              "fwi": 3.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Mesangat",
+              "ffmc": 85.4,
+              "fwi": 3.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sangatta Selatan",
+              "ffmc": 78.6,
+              "fwi": 2.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Wahau",
+              "ffmc": 83.3,
+              "fwi": 2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Batu Ampar",
+              "ffmc": 79.6,
+              "fwi": 1.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Rantau Pulung",
+              "ffmc": 80.4,
+              "fwi": 1.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Telen",
+              "ffmc": 77.3,
+              "fwi": 1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Teluk Pandan",
+              "ffmc": 74.4,
+              "fwi": 0.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Busang",
+              "ffmc": 81,
+              "fwi": 0.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            }
+          ]
+        },
+        {
+          "name": "Kab. Mahakam Ulu",
+          "ffmc": 74.1,
+          "fwi": 2.2,
+          "n_grid_ffmc": 40,
+          "n_grid_fwi": 40,
+          "kecamatan": [
+            {
+              "name": "Long Bagun",
+              "ffmc": 73.4,
+              "fwi": 3.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Apari",
+              "ffmc": 83.4,
+              "fwi": 2.5,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Laham",
+              "ffmc": 71.6,
+              "fwi": 1.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Hubung",
+              "ffmc": 70.8,
+              "fwi": 1.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Pahangai",
+              "ffmc": 71.1,
+              "fwi": 1.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            }
+          ]
+        },
+        {
+          "name": "Kab. Paser",
+          "ffmc": 84.1,
+          "fwi": 8.4,
+          "n_grid_ffmc": 80,
+          "n_grid_fwi": 80,
+          "kecamatan": [
+            {
+              "name": "Tanjung Harapan",
+              "ffmc": 86.8,
+              "fwi": 15.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Batu Engau",
+              "ffmc": 85.8,
+              "fwi": 15.3,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Paser Belengkong",
+              "ffmc": 84.8,
+              "fwi": 12,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Tanah Grogot",
+              "ffmc": 83.2,
+              "fwi": 10.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Samu",
+              "ffmc": 81.9,
+              "fwi": 7.1,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Kuaro",
+              "ffmc": 83.6,
+              "fwi": 6.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Muara Komam",
+              "ffmc": 84.6,
+              "fwi": 6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Ikis",
+              "ffmc": 84.7,
+              "fwi": 4.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Batu Sopang",
+              "ffmc": 80.5,
+              "fwi": 3.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Long Kali",
+              "ffmc": 84.8,
+              "fwi": 3.3,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            }
+          ]
+        },
+        {
+          "name": "Kab. Penajam Paser Utara",
+          "ffmc": 82.4,
+          "fwi": 6.8,
+          "n_grid_ffmc": 32,
+          "n_grid_fwi": 32,
+          "kecamatan": [
+            {
+              "name": "Sepaku",
+              "ffmc": 83,
+              "fwi": 9.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Penajam",
+              "ffmc": 82,
+              "fwi": 8.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Waru",
+              "ffmc": 83,
+              "fwi": 4.8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Babulu",
+              "ffmc": 81.5,
+              "fwi": 4.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            }
+          ]
+        },
+        {
+          "name": "Kota Balikpapan",
+          "ffmc": 80.6,
+          "fwi": 6.9,
+          "n_grid_ffmc": 48,
+          "n_grid_fwi": 48,
+          "kecamatan": [
+            {
+              "name": "Balikpapan Selatan",
+              "ffmc": 80.7,
+              "fwi": 9.2,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Balikpapan Barat",
+              "ffmc": 82.1,
+              "fwi": 9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Balikpapan Utara",
+              "ffmc": 82.2,
+              "fwi": 8,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Balikpapan Timur",
+              "ffmc": 82.7,
+              "fwi": 6.4,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Balikpapan Kota",
+              "ffmc": 78.2,
+              "fwi": 4.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Balikpapan Tengah",
+              "ffmc": 77.8,
+              "fwi": 4.3,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            }
+          ]
+        },
+        {
+          "name": "Kota Bontang",
+          "ffmc": 78.6,
+          "fwi": 3.2,
+          "n_grid_ffmc": 24,
+          "n_grid_fwi": 24,
+          "kecamatan": [
+            {
+              "name": "Bontang Utara",
+              "ffmc": 79,
+              "fwi": 3.7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Bontang Barat",
+              "ffmc": 78.3,
+              "fwi": 2.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Bontang Selatan",
+              "ffmc": 78.6,
+              "fwi": 2.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            }
+          ]
+        },
+        {
+          "name": "Kota Samarinda",
+          "ffmc": 83.7,
+          "fwi": 6.8,
+          "n_grid_ffmc": 80,
+          "n_grid_fwi": 80,
+          "kecamatan": [
+            {
+              "name": "Sungai Pinang",
+              "ffmc": 85.5,
+              "fwi": 7.3,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Samarinda Kota",
+              "ffmc": 83.8,
+              "fwi": 7,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Samarinda Ilir",
+              "ffmc": 83.7,
+              "fwi": 6.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Samarinda Seberang",
+              "ffmc": 83.4,
+              "fwi": 6.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Samarinda Ulu",
+              "ffmc": 84.1,
+              "fwi": 6.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sungai Kunjang",
+              "ffmc": 83.6,
+              "fwi": 6.9,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Palaran",
+              "ffmc": 82.8,
+              "fwi": 6.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Samarinda Utara",
+              "ffmc": 83.7,
+              "fwi": 6.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Sambutan",
+              "ffmc": 82.9,
+              "fwi": 6.6,
+              "n_grid_ffmc": 8,
+              "n_grid_fwi": 8
+            },
+            {
+              "name": "Loa Janan Ilir",
+              "ffmc": 83.1,
+              "fwi": 6.5,
               "n_grid_ffmc": 8,
               "n_grid_fwi": 8
             }
